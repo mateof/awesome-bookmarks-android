@@ -17,6 +17,13 @@ data class AppSettings(
     val appLockEnabled: Boolean = true,
     val keepScreenOn: Boolean = false,
     val showQuickButton: Boolean = true,
+    /**
+     * Where the floating button sits, as a fraction of the free space on each
+     * axis. Fractions rather than pixels so it lands in the same relative spot
+     * after a rotation or on a different screen. 1,1 is the bottom end corner.
+     */
+    val quickButtonX: Float = 1f,
+    val quickButtonY: Float = 1f,
     val openExternalLinksInBrowser: Boolean = true,
     val allowMixedContent: Boolean = false,
     val textZoom: Int = 100,

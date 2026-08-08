@@ -132,6 +132,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun setQuickButtonPosition(x: Float, y: Float) {
+        viewModelScope.launch { settingsRepository.setQuickButtonPosition(x, y) }
+    }
+
     fun reload() {
         viewModelScope.launch { _events.send(MainEvent.Reload) }
     }

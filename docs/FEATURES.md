@@ -62,7 +62,7 @@ The GitHub client is a **separate** `OkHttpClient`. The one used for your server
 
 | Setting | Default | What it does |
 |---|---|---|
-| Floating app button | On | Settings, reload, save and search from inside the web interface. Fades to 25% after 3 seconds |
+| Floating app button | On | Settings, reload, save and search from inside the web interface. Fades to 25% after 3 seconds, and **drag it anywhere** if it covers something you need. It remembers where you left it |
 | Keep the screen on | Off | Holds `FLAG_KEEP_SCREEN_ON` while the app is open |
 | Text size | 100% | WebView text zoom, 70% to 150% |
 | Open external links in the browser | On | Links to other sites open in a Custom Tab instead of hijacking the app |

@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.2]
+
+### Changed
+- The floating button can be dragged anywhere on screen and stays where you put
+  it. Pinned to the bottom end corner it kept landing on top of controls
+  underneath and swallowing taps meant for them. The position is stored as a
+  fraction of the free space, so it holds its relative place across rotation and
+  screen sizes, and it is clamped so the control is always fully visible,
+  including when expanding makes it taller near an edge.
+
 ## [0.1.1]
 
 ### Fixed
@@ -44,6 +54,7 @@ First release.
 - In app updates from GitHub releases, with a daily background check.
 - English and Spanish translations.
 
-[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.1.2
 [0.1.1]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.1.1
 [0.1.0]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.1.0
