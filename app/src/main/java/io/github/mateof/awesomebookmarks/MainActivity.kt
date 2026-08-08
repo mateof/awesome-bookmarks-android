@@ -39,6 +39,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -71,6 +73,7 @@ import io.github.mateof.awesomebookmarks.update.UpdateCheckWorker
 import io.github.mateof.awesomebookmarks.update.UpdateDialog
 import io.github.mateof.awesomebookmarks.update.UpdateViewModel
 import io.github.mateof.awesomebookmarks.util.WebViewInfo
+import io.github.mateof.awesomebookmarks.util.isSameOrigin
 import java.io.File
 
 @AndroidEntryPoint
@@ -124,6 +127,13 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    override fun onStop() {
+        // Saved on the way out rather than in onSaveInstanceState, so it also
+        // covers the case where the activity is killed without one.
+        webView?.saveState(viewModel.webViewState)
+        super.onStop()
+    }
+
     override fun onDestroy() {
         webView?.destroy()
         webView = null
@@ -143,18 +153,24 @@ class MainActivity : FragmentActivity() {
         KeepScreenOnEffect(loaded.keepScreenOn)
         UpdateCheckEffect(loaded.updateChecksEnabled)
 
-        if (loaded.appLockEnabled && AppLock.isAvailable(this)) {
-            var unlocked by rememberSaveable { mutableStateOf(false) }
-            ReLockOnReturnEffect(onRelock = { unlocked = false })
-            if (!unlocked) {
-                LockGate(onUnlocked = {
-                    viewModel.unlockedAt = SystemClock.elapsedRealtime()
-                    unlocked = true
-                })
-                return
+        val lockEnabled = loaded.appLockEnabled && remember { AppLock.isAvailable(this) }
+        var locked by rememberSaveable { mutableStateOf(lockEnabled) }
+        LockLifecycleEffect(enabled = lockEnabled, onLock = { locked = true })
+
+        // The lock is drawn on top rather than replacing the content. Taking the
+        // content out of the composition would release the AndroidView, destroy
+        // the WebView and lose the page you were on, which is exactly what
+        // happened every time a link opened in the browser.
+        Box(Modifier.fillMaxSize()) {
+            AppContent(uiState, loaded)
+            if (lockEnabled && locked) {
+                LockOverlay(onUnlocked = { locked = false })
             }
         }
+    }
 
+    @Composable
+    private fun AppContent(uiState: MainUiState, loaded: AppSettings) {
         UpdateAvailableDialog()
 
         when (val state = uiState) {
@@ -224,7 +240,18 @@ class MainActivity : FragmentActivity() {
                             startDownload(url, userAgent, contentDisposition, mimeType)
                         }
                         addJavascriptInterface(BlobDownloadBridge(), Downloader.BRIDGE_NAME)
-                        loadUrl(state.baseUrl)
+                        // Restoring beats reloading: it brings back the whole
+                        // back stack, not just the last address. Guarded by an
+                        // origin check so a history saved against a previous
+                        // server address cannot resurface after it changes.
+                        val restored = if (viewModel.webViewState.isEmpty) {
+                            null
+                        } else {
+                            restoreState(viewModel.webViewState)?.currentItem?.url
+                        }
+                        if (restored == null || !isSameOrigin(Uri.parse(restored), state.baseUrl)) {
+                            loadUrl(state.baseUrl)
+                        }
                         this@MainActivity.webView = this
                     }
                 },
@@ -410,8 +437,12 @@ class MainActivity : FragmentActivity() {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
     }
 
+    /**
+     * Opaque full screen cover. It must hide the content completely and swallow
+     * every touch, because the WebView is still alive and composed underneath.
+     */
     @Composable
-    private fun LockGate(onUnlocked: () -> Unit) {
+    private fun LockOverlay(onUnlocked: () -> Unit) {
         var promptVisible by remember { mutableStateOf(false) }
 
         fun prompt() {
@@ -428,25 +459,41 @@ class MainActivity : FragmentActivity() {
 
         LaunchedEffect(Unit) { prompt() }
 
-        Box(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
-            StatusScreen(
-                title = stringResource(R.string.lock_title),
-                body = stringResource(R.string.lock_body),
-                actionLabel = if (promptVisible) null else stringResource(R.string.action_unlock),
-                onAction = if (promptVisible) null else ({ prompt() }),
-            )
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .blockTouches(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            Box(Modifier.statusBarsPadding().navigationBarsPadding()) {
+                StatusScreen(
+                    title = stringResource(R.string.lock_title),
+                    body = stringResource(R.string.lock_body),
+                    actionLabel = if (promptVisible) null else stringResource(R.string.action_unlock),
+                    onAction = if (promptVisible) null else ({ prompt() }),
+                )
+            }
         }
     }
 
     @Composable
-    private fun ReLockOnReturnEffect(onRelock: () -> Unit) {
+    private fun LockLifecycleEffect(enabled: Boolean, onLock: () -> Unit) {
         val lifecycleOwner = LocalLifecycleOwner.current
-        DisposableEffect(lifecycleOwner) {
+        DisposableEffect(lifecycleOwner, enabled) {
             val observer = LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_START &&
-                    SystemClock.elapsedRealtime() - viewModel.unlockedAt > AppLock.GRACE_PERIOD_MS
-                ) {
-                    onRelock()
+                when (event) {
+                    Lifecycle.Event.ON_STOP ->
+                        viewModel.backgroundedAt = SystemClock.elapsedRealtime()
+
+                    Lifecycle.Event.ON_START -> {
+                        val leftAt = viewModel.backgroundedAt
+                        val awayFor = SystemClock.elapsedRealtime() - leftAt
+                        if (enabled && leftAt != 0L && awayFor > AppLock.GRACE_PERIOD_MS) {
+                            onLock()
+                        }
+                    }
+
+                    else -> Unit
                 }
             }
             lifecycleOwner.lifecycle.addObserver(observer)
@@ -518,5 +565,17 @@ class MainActivity : FragmentActivity() {
 
     private companion object {
         const val EXIT_CONFIRM_WINDOW_MS = 2_000L
+    }
+}
+
+/**
+ * Consumes every pointer event in the Initial pass, so nothing reaches the
+ * WebView that is still composed behind the lock.
+ */
+private fun Modifier.blockTouches(): Modifier = pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) {
+            awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+        }
     }
 }
