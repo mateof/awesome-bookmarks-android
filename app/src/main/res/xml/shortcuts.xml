@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="save_link"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_save"
+        android:shortcutShortLabel="@string/shortcut_save_short"
+        android:shortcutLongLabel="@string/shortcut_save_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="io.github.mateof.awesomebookmarks"
+            android:targetClass="io.github.mateof.awesomebookmarks.save.SaveBookmarkActivity" />
+    </shortcut>
+</shortcuts>

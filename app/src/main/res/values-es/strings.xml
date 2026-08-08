@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AwesomeBookmarks</string>
+
+    <!-- Inicio de sesión -->
+    <string name="signin_title">Conecta con tu servidor</string>
+    <string name="signin_subtitle">Esta app habla con un servidor de AwesomeBookmarks que ejecutas tú.</string>
+    <string name="signin_server">Dirección del servidor</string>
+    <string name="signin_server_hint">Host y puerto. En red local vale http sin cifrar.</string>
+    <string name="signin_fallback">Dirección alternativa (opcional)</string>
+    <string name="signin_fallback_hint">Se prueba cuando la primera no responde: tu VPN, por ejemplo.</string>
+    <string name="signin_identifier">Correo o nick</string>
+    <string name="signin_identifier_hint">El mismo que usas en la web.</string>
+    <string name="signin_password">Contraseña</string>
+    <string name="signin_totp">Código de dos factores</string>
+    <string name="signin_totp_hint">Los seis dígitos de tu app de autenticación.</string>
+    <string name="signin_action">Entrar</string>
+    <string name="signin_storage_notice">Tu contraseña se cifra con una clave del Android Keystore. Se guarda para que la app pueda volver a entrar sola, y se borra cuando cierras sesión.</string>
+    <string name="signin_error_unreachable">Ningún servidor de AwesomeBookmarks ha respondido en esa dirección.</string>
+    <string name="signin_error_credentials">El servidor ha rechazado esas credenciales.</string>
+    <string name="signin_error_totp">Esta cuenta tiene doble factor. Introduce el código.</string>
+    <string name="signin_error_server">El servidor ha rechazado el inicio de sesión.</string>
+
+    <!-- Errores y estado -->
+    <string name="error_unreachable_title">Servidor inaccesible</string>
+    <string name="error_unreachable_body">No ha respondido nada en:\n%1$s</string>
+    <string name="error_page_title">No se ha podido cargar la página</string>
+    <string name="error_session_title">Sesión rechazada</string>
+    <string name="error_session_body">El servidor sigue pidiendo iniciar sesión. Lo más probable es que tu contraseña haya cambiado.</string>
+
+    <!-- Acciones -->
+    <string name="action_retry">Reintentar</string>
+    <string name="action_open_settings">Ajustes</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_unlock">Desbloquear</string>
+    <string name="action_back">Atrás</string>
+    <string name="action_show_password">Mostrar contraseña</string>
+    <string name="action_hide_password">Ocultar contraseña</string>
+    <string name="action_quick_capture">Guardar un enlace</string>
+    <string name="action_search">Buscar</string>
+    <string name="action_reload">Recargar</string>
+    <string name="action_app_menu">Menú de la app</string>
+
+    <!-- Avisos -->
+    <string name="toast_press_back_again">Pulsa atrás otra vez para salir</string>
+    <string name="toast_no_app_for_link">Ninguna app puede abrir ese enlace</string>
+    <string name="toast_download_started">Descargando %1$s</string>
+    <string name="toast_download_saved">%1$s guardado en Descargas</string>
+    <string name="toast_download_failed">La descarga ha fallado</string>
+    <string name="file_chooser_title">Elige un archivo</string>
+    <string name="warning_webview_missing">Falta Android System WebView o está desactivado. La app no puede funcionar sin él.</string>
+    <string name="warning_webview_outdated">Tu Android System WebView (%1$s) es antiguo. Actualízalo para que la interfaz funcione bien.</string>
+
+    <!-- Bloqueo -->
+    <string name="lock_title">Desbloquear AwesomeBookmarks</string>
+    <string name="lock_subtitle">La sesión sigue abierta en este dispositivo.</string>
+    <string name="lock_body">Autentícate para abrir tus bookmarks.</string>
+
+    <!-- Guardar un bookmark -->
+    <string name="save_title">Guardar este enlace</string>
+    <string name="save_url">URL</string>
+    <string name="save_url_invalid">Eso no parece una URL</string>
+    <string name="save_title_field">Título</string>
+    <string name="save_title_hint">Déjalo vacío y el servidor lo saca de la página.</string>
+    <string name="save_folder_root">Sin carpeta (raíz)</string>
+    <string name="save_folders_empty">Aún no hay carpetas. Se guardará en la raíz.</string>
+    <string name="save_tags">Etiquetas</string>
+    <string name="save_tags_hint">Intro o una coma añade una. Las que no existan se crean.</string>
+    <string name="save_tag_remove">Quitar etiqueta</string>
+    <string name="save_action">Guardar</string>
+    <string name="save_done">Guardado</string>
+    <string name="save_error_not_configured">Configura antes el servidor</string>
+    <string name="save_error_unreachable">El servidor está inaccesible</string>
+    <string name="save_error_sign_in">Vuelve a iniciar sesión desde la app</string>
+    <string name="save_error_generic">No se ha podido guardar el bookmark</string>
+
+    <!-- Accesos directos y widget -->
+    <string name="shortcut_save_short">Guardar</string>
+    <string name="shortcut_save_long">Guardar un enlace</string>
+    <string name="shortcut_search_short">Buscar</string>
+    <string name="shortcut_search_long">Buscar en tus bookmarks</string>
+    <string name="widget_description">Guardar un enlace en AwesomeBookmarks</string>
+    <string name="widget_save_label">Guardar</string>
+    <string name="widget_open_label">Abrir AwesomeBookmarks</string>
+
+    <!-- Ajustes -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_save">Guardar</string>
+    <string name="settings_section_server">Servidor</string>
+    <string name="settings_save_server">Guardar direcciones</string>
+    <string name="settings_active_url">Conectado ahora a %1$s</string>
+    <string name="settings_sign_out">Cerrar sesión</string>
+    <string name="settings_sign_out_confirm">Esto borra la contraseña guardada y la sesión. Tendrás que volver a entrar.</string>
+    <string name="settings_session_explainer">La app mantiene la sesión indefinidamente: cuando el servidor la tira o descarta su clave de descifrado, vuelve a entrar en segundo plano. Cierra sesión desde aquí, no desde la web, porque la app la volvería a abrir.</string>
+
+    <string name="settings_section_security">Seguridad</string>
+    <string name="settings_app_lock">Bloqueo de la app</string>
+    <string name="settings_app_lock_summary">Pide biometría o el PIN del dispositivo antes de mostrar tus bookmarks</string>
+    <string name="settings_app_lock_unavailable">Este dispositivo no tiene biometría ni credencial configurada</string>
+
+    <string name="settings_section_saving">Guardar enlaces</string>
+    <string name="settings_default_folder">Carpeta por defecto: %1$s</string>
+    <string name="settings_remember_folder">Recordar la última carpeta</string>
+    <string name="settings_remember_folder_summary">Preselecciona la carpeta en la que guardaste la última vez</string>
+    <string name="settings_always_tags">Etiquetas para todo</string>
+    <string name="settings_always_tags_summary">Separadas por comas. Se añaden a cada enlace además de las que escribas.</string>
+    <string name="settings_one_tap">Guardar sin preguntar</string>
+    <string name="settings_one_tap_summary">Compartir una página la guarda directa en la carpeta por defecto, sin hoja</string>
+
+    <string name="settings_section_display">Pantalla</string>
+    <string name="settings_quick_button">Botón flotante de la app</string>
+    <string name="settings_quick_button_summary">Da acceso a ajustes, recarga, guardar y buscar desde la interfaz web</string>
+    <string name="settings_keep_screen_on">Mantener la pantalla encendida</string>
+    <string name="settings_keep_screen_on_summary">Evita que la pantalla se apague mientras la app está abierta</string>
+    <string name="settings_text_zoom">Tamaño del texto: %1$d%%</string>
+
+    <string name="settings_section_advanced">Avanzado</string>
+    <string name="settings_external_links">Abrir enlaces externos en el navegador</string>
+    <string name="settings_external_links_summary">Los enlaces a otros sitios se abren en una pestaña del navegador, no dentro de la app</string>
+    <string name="settings_mixed_content">Permitir contenido mixto</string>
+    <string name="settings_mixed_content_summary">Actívalo solo si tu servidor HTTPS carga recursos por http sin cifrar</string>
+
+    <!-- Actualizaciones -->
+    <string name="settings_section_updates">Actualizaciones</string>
+    <string name="settings_update_checks">Buscar versiones nuevas</string>
+    <string name="settings_update_checks_summary">Mira una vez al día las releases de este proyecto en GitHub y te avisa</string>
+    <string name="notification_channel_updates">Actualizaciones de la app</string>
+    <string name="notification_channel_updates_description">Te avisa cuando se publica una versión más nueva de esta app</string>
+    <string name="update_notification_title">Ya está disponible AwesomeBookmarks %1$s</string>
+    <string name="update_notification_text">Toca para ver qué cambia e instalarla</string>
+    <string name="update_available_title">Versión %1$s disponible</string>
+    <string name="update_installed_version">Tienes la %1$s</string>
+    <string name="update_up_to_date">Tienes la última versión</string>
+    <string name="update_check_now">Buscar ahora</string>
+    <string name="update_download">Descargar</string>
+    <string name="update_downloading">Descargando… %1$d%%</string>
+    <string name="update_download_failed">La descarga ha fallado. Reinténtalo o coge el APK de GitHub.</string>
+    <string name="update_install">Instalar</string>
+    <string name="update_install_failed">Ningún instalador puede abrir el archivo</string>
+    <string name="update_later">Más tarde</string>
+    <string name="update_skip">Saltar esta versión</string>
+    <string name="update_allow_unknown_sources">Permite a esta app instalar aplicaciones y vuelve a pulsar Instalar</string>
+    <string name="update_debug_signature_warning">Esta es una build de debug. Android se negará a instalar encima un APK de release porque las firmas no coinciden.</string>
+
+    <string name="settings_section_about">Acerca de</string>
+    <string name="settings_app_version">Versión de la app %1$s</string>
+    <string name="settings_webview_version">Android System WebView %1$s</string>
+    <string name="settings_webview_unknown">desconocida</string>
+    <string name="settings_webview_outdated_hint">Este WebView es anterior a Chromium 108 y puede renderizar mal la interfaz.</string>
+    <string name="settings_disclaimer">App complementaria del servidor AwesomeBookmarks.</string>
+</resources>

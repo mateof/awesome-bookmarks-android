@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_accent">#FF6D4AFF</color>
+    <color name="launcher_background">#FF1B1233</color>
+    <color name="window_background_light">#FFFDFBFF</color>
+    <color name="window_background_dark">#FF1A1B1F</color>
+</resources>

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: The AwesomeBookmarks server itself
+    url: https://github.com/mateof/awesome-bookmarks-manager/issues
+    about: Bugs in the web interface, the API or snapshots belong in the server repo.

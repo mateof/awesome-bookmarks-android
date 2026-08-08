@@ -1,0 +1,111 @@
+package io.github.mateof.awesomebookmarks.save
+
+import android.util.Patterns
+import io.github.mateof.awesomebookmarks.data.SettingsRepository
+import io.github.mateof.awesomebookmarks.network.ApiCall
+import io.github.mateof.awesomebookmarks.network.BookmarksApi
+import io.github.mateof.awesomebookmarks.network.Folder
+import io.github.mateof.awesomebookmarks.network.SessionManager
+import io.github.mateof.awesomebookmarks.network.Tag
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Everything the share sheet needs. Goes through
+ * [SessionManager.withSession] so a save works even when the app has not been
+ * opened for days and the server has dropped its decryption key.
+ */
+@Singleton
+class SaveRepository @Inject constructor(
+    private val api: BookmarksApi,
+    private val sessionManager: SessionManager,
+    private val settingsRepository: SettingsRepository,
+) {
+    suspend fun folders(): Result<List<FolderNode>> = runCatching {
+        val flat = sessionManager.withSession { baseUrl ->
+            ApiCall(httpCode = 200, value = api.folders(baseUrl))
+        }
+        buildTree(flat)
+    }
+
+    suspend fun tags(): Result<List<Tag>> = runCatching {
+        sessionManager.withSession { baseUrl ->
+            ApiCall(httpCode = 200, value = api.tags(baseUrl))
+        }.sortedBy { it.name.lowercase() }
+    }
+
+    suspend fun save(
+        url: String,
+        title: String?,
+        folderId: String?,
+        folderName: String,
+        tags: List<String>,
+    ): Result<Unit> = runCatching {
+        require(isProbablyUrl(url)) { "Not a URL: $url" }
+
+        val settings = settingsRepository.current()
+        val allTags = (tags + settings.alwaysTagList)
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinctBy { it.lowercase() }
+
+        sessionManager.withSession { baseUrl ->
+            val response = api.quickAdd(baseUrl, url, title, folderId, allTags)
+            ApiCall(
+                httpCode = response.httpCode,
+                value = if (response.isSuccess) Unit else null,
+                errorMessage = response.errorMessage(),
+            )
+        }
+
+        if (settings.rememberLastFolder) {
+            settingsRepository.setDefaultFolder(folderId.orEmpty(), folderName)
+        }
+    }
+
+    /**
+     * The API returns folders flat with a `parentId`; the picker wants them
+     * ordered and indented, so the tree is built here once.
+     */
+    private fun buildTree(flat: List<Folder>): List<FolderNode> {
+        val childrenOf = flat.groupBy { it.parentId }
+        val result = mutableListOf<FolderNode>()
+
+        fun walk(parentId: String?, depth: Int) {
+            childrenOf[parentId]
+                ?.sortedBy { it.name.lowercase() }
+                ?.forEach { folder ->
+                    result += FolderNode(folder.id, folder.name, depth)
+                    // Depth is capped only by the data; a cycle would loop, but
+                    // the server rejects moves that would create one.
+                    walk(folder.id, depth + 1)
+                }
+        }
+
+        walk(null, 0)
+        return result
+    }
+
+    private fun isProbablyUrl(candidate: String): Boolean =
+        Patterns.WEB_URL.matcher(candidate.trim()).matches()
+}
+
+data class FolderNode(val id: String, val name: String, val depth: Int)
+
+/**
+ * Browsers share a page as "Title https://url", or sometimes just the URL.
+ * Pulling the first URL out of whatever arrived is what makes the share sheet
+ * work from every app instead of only from Chrome.
+ */
+fun extractUrl(shared: String?): String? {
+    if (shared.isNullOrBlank()) return null
+    val matcher = Patterns.WEB_URL.matcher(shared)
+    return if (matcher.find()) shared.substring(matcher.start(), matcher.end()) else null
+}
+
+/** Whatever is left once the URL is removed, which is usually the page title. */
+fun extractTitle(shared: String?, url: String?): String {
+    if (shared.isNullOrBlank()) return ""
+    if (url == null) return shared.trim()
+    return shared.replace(url, "").trim().trim('-', '|', '–').trim()
+}

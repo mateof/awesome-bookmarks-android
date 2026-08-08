@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AwesomeBookmarks</string>
+
+    <!-- Sign in -->
+    <string name="signin_title">Connect to your server</string>
+    <string name="signin_subtitle">This app talks to an AwesomeBookmarks server you run yourself.</string>
+    <string name="signin_server">Server address</string>
+    <string name="signin_server_hint">Host and port. Plain http is fine on a local network.</string>
+    <string name="signin_fallback">Fallback address (optional)</string>
+    <string name="signin_fallback_hint">Tried when the first address does not answer, for example your VPN.</string>
+    <string name="signin_identifier">Email or nickname</string>
+    <string name="signin_identifier_hint">The same one you use on the web app.</string>
+    <string name="signin_password">Password</string>
+    <string name="signin_totp">Two-factor code</string>
+    <string name="signin_totp_hint">The six digits from your authenticator app.</string>
+    <string name="signin_action">Sign in</string>
+    <string name="signin_storage_notice">Your password is encrypted with a key held in the Android Keystore. It is kept so the app can sign in again by itself, and is deleted when you sign out.</string>
+    <string name="signin_error_unreachable">No AwesomeBookmarks server answered at that address.</string>
+    <string name="signin_error_credentials">The server rejected those credentials.</string>
+    <string name="signin_error_totp">This account has two-factor authentication. Enter the code.</string>
+    <string name="signin_error_server">The server refused the sign in.</string>
+
+    <!-- Errors and status -->
+    <string name="error_unreachable_title">Server unreachable</string>
+    <string name="error_unreachable_body">Nothing answered at:\n%1$s</string>
+    <string name="error_page_title">Could not load the page</string>
+    <string name="error_session_title">Session rejected</string>
+    <string name="error_session_body">The server keeps asking for a sign in. Your password has probably changed.</string>
+
+    <!-- Actions -->
+    <string name="action_retry">Retry</string>
+    <string name="action_open_settings">Settings</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_unlock">Unlock</string>
+    <string name="action_back">Back</string>
+    <string name="action_show_password">Show password</string>
+    <string name="action_hide_password">Hide password</string>
+    <string name="action_quick_capture">Save a link</string>
+    <string name="action_search">Search</string>
+    <string name="action_reload">Reload</string>
+    <string name="action_app_menu">App menu</string>
+
+    <!-- Toasts -->
+    <string name="toast_press_back_again">Press back again to exit</string>
+    <string name="toast_no_app_for_link">No app can open that link</string>
+    <string name="toast_download_started">Downloading %1$s</string>
+    <string name="toast_download_saved">Saved %1$s to Downloads</string>
+    <string name="toast_download_failed">Download failed</string>
+    <string name="file_chooser_title">Choose a file</string>
+    <string name="warning_webview_missing">Android System WebView is missing or disabled. The app cannot run without it.</string>
+    <string name="warning_webview_outdated">Your Android System WebView (%1$s) is old. Update it for a working interface.</string>
+
+    <!-- App lock -->
+    <string name="lock_title">Unlock AwesomeBookmarks</string>
+    <string name="lock_subtitle">Your library stays signed in on this device.</string>
+    <string name="lock_body">Authenticate to open your bookmarks.</string>
+
+    <!-- Save a bookmark -->
+    <string name="save_title">Save this link</string>
+    <string name="save_url">URL</string>
+    <string name="save_url_invalid">That does not look like a URL</string>
+    <string name="save_title_field">Title</string>
+    <string name="save_title_hint">Leave it empty and the server reads it from the page.</string>
+    <string name="save_folder_root">No folder (root)</string>
+    <string name="save_folders_empty">No folders yet. It will be saved at the root.</string>
+    <string name="save_tags">Tags</string>
+    <string name="save_tags_hint">Enter or a comma adds one. Tags that do not exist are created.</string>
+    <string name="save_tag_remove">Remove tag</string>
+    <string name="save_action">Save</string>
+    <string name="save_done">Saved</string>
+    <string name="save_error_not_configured">Set up the server first</string>
+    <string name="save_error_unreachable">The server is unreachable</string>
+    <string name="save_error_sign_in">Sign in again from the app</string>
+    <string name="save_error_generic">Could not save the bookmark</string>
+
+    <!-- Shortcuts and widget -->
+    <string name="shortcut_save_short">Save</string>
+    <string name="shortcut_save_long">Save a link</string>
+    <string name="shortcut_search_short">Search</string>
+    <string name="shortcut_search_long">Search your bookmarks</string>
+    <string name="widget_description">Save a link to AwesomeBookmarks</string>
+    <string name="widget_save_label">Save</string>
+    <string name="widget_open_label">Open AwesomeBookmarks</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_section_server">Server</string>
+    <string name="settings_save_server">Save addresses</string>
+    <string name="settings_active_url">Currently connected to %1$s</string>
+    <string name="settings_sign_out">Sign out</string>
+    <string name="settings_sign_out_confirm">This deletes the stored password and the session. You will have to sign in again.</string>
+    <string name="settings_session_explainer">The app stays signed in indefinitely: when the server drops the session or its decryption key, it signs in again in the background. Sign out here rather than in the web interface, which the app would immediately undo.</string>
+
+    <string name="settings_section_security">Security</string>
+    <string name="settings_app_lock">App lock</string>
+    <string name="settings_app_lock_summary">Ask for biometrics or the device PIN before showing your bookmarks</string>
+    <string name="settings_app_lock_unavailable">No biometrics or device credential set up on this device</string>
+
+    <string name="settings_section_saving">Saving links</string>
+    <string name="settings_default_folder">Default folder: %1$s</string>
+    <string name="settings_remember_folder">Remember the last folder</string>
+    <string name="settings_remember_folder_summary">Preselect whichever folder you saved to last</string>
+    <string name="settings_always_tags">Tags added to everything</string>
+    <string name="settings_always_tags_summary">Comma separated. Added to every link on top of the ones you type.</string>
+    <string name="settings_one_tap">Save without asking</string>
+    <string name="settings_one_tap_summary">Sharing a page saves it straight into the default folder, with no sheet</string>
+
+    <string name="settings_section_display">Display</string>
+    <string name="settings_quick_button">Floating app button</string>
+    <string name="settings_quick_button_summary">Reach settings, reload, save and search from inside the web interface</string>
+    <string name="settings_keep_screen_on">Keep the screen on</string>
+    <string name="settings_keep_screen_on_summary">Prevents the display from sleeping while the app is open</string>
+    <string name="settings_text_zoom">Text size: %1$d%%</string>
+
+    <string name="settings_section_advanced">Advanced</string>
+    <string name="settings_external_links">Open external links in the browser</string>
+    <string name="settings_external_links_summary">Links to other sites open in a custom tab instead of inside the app</string>
+    <string name="settings_mixed_content">Allow mixed content</string>
+    <string name="settings_mixed_content_summary">Only enable if your HTTPS server loads assets over plain http</string>
+
+    <!-- Updates -->
+    <string name="settings_section_updates">Updates</string>
+    <string name="settings_update_checks">Check for new versions</string>
+    <string name="settings_update_checks_summary">Looks at this project\'s GitHub releases once a day and notifies you</string>
+    <string name="notification_channel_updates">App updates</string>
+    <string name="notification_channel_updates_description">Tells you when a newer release of this app is published</string>
+    <string name="update_notification_title">AwesomeBookmarks %1$s is available</string>
+    <string name="update_notification_text">Tap to see what changed and install it</string>
+    <string name="update_available_title">Version %1$s is available</string>
+    <string name="update_installed_version">You are running %1$s</string>
+    <string name="update_up_to_date">You are on the latest version</string>
+    <string name="update_check_now">Check now</string>
+    <string name="update_download">Download</string>
+    <string name="update_downloading">Downloading… %1$d%%</string>
+    <string name="update_download_failed">The download failed. Try again or get the APK from GitHub.</string>
+    <string name="update_install">Install</string>
+    <string name="update_install_failed">No installer could handle the file</string>
+    <string name="update_later">Later</string>
+    <string name="update_skip">Skip this version</string>
+    <string name="update_allow_unknown_sources">Allow this app to install apps, then press Install again</string>
+    <string name="update_debug_signature_warning">This is a debug build. Android will refuse to install a release APK over it because the signatures differ.</string>
+
+    <string name="settings_section_about">About</string>
+    <string name="settings_app_version">App version %1$s</string>
+    <string name="settings_webview_version">Android System WebView %1$s</string>
+    <string name="settings_webview_unknown">unknown</string>
+    <string name="settings_webview_outdated_hint">This WebView is older than Chromium 108 and may render the interface incorrectly.</string>
+    <string name="settings_disclaimer">Companion app for the AwesomeBookmarks server.</string>
+</resources>

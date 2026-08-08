@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- A bookmark ribbon over a page: the whole product in one glyph. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M34,26h40a4,4 0 0,1 4,4v52a4,4 0 0,1 -4,4H34a4,4 0 0,1 -4,-4V30a4,4 0 0,1 4,-4z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M46,26h16v34l-8,-5 -8,5z" />
+</vector>
