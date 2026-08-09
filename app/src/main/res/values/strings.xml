@@ -63,7 +63,7 @@
     <string name="save_title_field">Title</string>
     <string name="save_title_hint">Leave it empty and the server reads it from the page.</string>
     <string name="save_folder_root">No folder (root)</string>
-    <string name="save_folders_empty">No folders yet. It will be saved at the root.</string>
+    <string name="save_folders_empty">You have no folders yet. Use the icon on the right to create one.</string>
     <string name="save_tags">Tags</string>
     <string name="save_tags_hint">Enter or a comma adds one. Tags that do not exist are created.</string>
     <string name="save_tag_remove">Remove tag</string>
@@ -163,4 +163,12 @@
     <string name="save_error_token_rejected">The API token was rejected. Create a new one and update it in Settings.</string>
     <string name="settings_server_version">Server version %1$s</string>
     <string name="settings_server_version_unknown">Server version unknown (needs server 0.20.2 or newer)</string>
+    <!-- Folder picker -->
+    <string name="save_folders_failed">Could not load your folders</string>
+    <string name="save_folder_new_title">New folder</string>
+    <string name="save_folder_new_at_root">It will be created at the root.</string>
+    <string name="save_folder_new_inside">It will be created inside %1$s.</string>
+    <string name="save_folder_new_name">Folder name</string>
+    <string name="save_folder_create">Create</string>
+    <string name="save_folder_new_child_of">New folder inside %1$s</string>
 </resources>

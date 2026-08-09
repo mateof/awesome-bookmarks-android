@@ -101,12 +101,66 @@ class SaveBookmarkViewModel @Inject constructor(
         }
     }
 
-    private fun loadFolders() {
+    fun loadFolders() {
+        _state.update { it.copy(foldersLoading = true, foldersError = null) }
         viewModelScope.launch {
             saveRepository.folders()
-                .onSuccess { folders -> _state.update { it.copy(folders = folders) } }
+                .onSuccess { folders ->
+                    _state.update { it.copy(folders = folders, foldersLoading = false) }
+                }
                 .onFailure { throwable ->
-                    _state.update { it.copy(error = throwable.toSaveError(), errorDetail = throwable.message.orEmpty()) }
+                    // Reported in the picker rather than as a global error: not
+                    // being able to list folders does not stop you saving to the
+                    // root, and claiming there are none would be a lie.
+                    _state.update {
+                        it.copy(
+                            foldersLoading = false,
+                            foldersError = throwable.message.orEmpty()
+                                .ifBlank { "Could not load folders" },
+                        )
+                    }
+                }
+        }
+    }
+
+    fun openNewFolderDialog(parent: FolderNode?) = _state.update {
+        it.copy(newFolderDialogOpen = true, newFolderParent = parent, newFolderError = null)
+    }
+
+    fun dismissNewFolderDialog() = _state.update {
+        it.copy(newFolderDialogOpen = false, newFolderParent = null, newFolderError = null)
+    }
+
+    fun createFolder(name: String) {
+        val current = _state.value
+        if (current.isCreatingFolder || name.isBlank()) return
+
+        _state.update { it.copy(isCreatingFolder = true, newFolderError = null) }
+        viewModelScope.launch {
+            saveRepository.createFolder(name, current.newFolderParent?.id)
+                .onSuccess { created ->
+                    // Select it straight away: wanting the folder is why you
+                    // opened this dialog.
+                    _state.update {
+                        it.copy(
+                            isCreatingFolder = false,
+                            newFolderDialogOpen = false,
+                            newFolderParent = null,
+                            folderId = created.id,
+                            folderName = created.name,
+                            folderPickerOpen = false,
+                        )
+                    }
+                    loadFolders()
+                }
+                .onFailure { throwable ->
+                    _state.update {
+                        it.copy(
+                            isCreatingFolder = false,
+                            newFolderError = throwable.message.orEmpty()
+                                .ifBlank { "Could not create the folder" },
+                        )
+                    }
                 }
         }
     }
@@ -132,7 +186,15 @@ data class SaveUiState(
     val folderId: String? = null,
     val folderName: String = "",
     val folders: List<FolderNode> = emptyList(),
+    val foldersLoading: Boolean = true,
+    /** Why the folder list could not be read. Null when it could. */
+    val foldersError: String? = null,
     val folderPickerOpen: Boolean = false,
+    val newFolderDialogOpen: Boolean = false,
+    /** Null means the new folder goes at the root. */
+    val newFolderParent: FolderNode? = null,
+    val isCreatingFolder: Boolean = false,
+    val newFolderError: String? = null,
     val tags: List<String> = emptyList(),
     val tagInput: String = "",
     val knownTags: List<Tag> = emptyList(),

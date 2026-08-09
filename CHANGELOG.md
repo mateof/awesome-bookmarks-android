@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1]
+
+### Fixed
+- The folder picker claimed you had no folders when it was simply still loading
+  them, or when the request had failed. Three different situations shared one
+  message, and the one it chose was the only one that was usually false. It now
+  shows a spinner while loading and the reason plus a retry when it fails, and
+  only says the list is empty when the server really returned nothing.
+
+### Added
+- Create folders from the save sheet, either at the root or inside any existing
+  folder. The new folder is selected right away, since wanting it is why you
+  opened the picker.
+
 ## [0.2.0]
 
 ### Added
@@ -78,7 +92,8 @@ First release.
 - In app updates from GitHub releases, with a daily background check.
 - English and Spanish translations.
 
-[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.2.1
 [0.2.0]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.2.0
 [0.1.2]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.1.2
 [0.1.1]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.1.1

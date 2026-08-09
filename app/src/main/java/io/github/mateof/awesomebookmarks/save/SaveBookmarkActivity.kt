@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,17 +19,21 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -40,6 +45,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -110,10 +118,21 @@ class SaveBookmarkActivity : ComponentActivity() {
 
                 if (state.folderPickerOpen) {
                     FolderPickerSheet(
-                        folders = state.folders,
-                        selectedId = state.folderId,
+                        state = state,
                         onSelect = viewModel::onFolderSelected,
+                        onCreateIn = viewModel::openNewFolderDialog,
+                        onRetry = viewModel::loadFolders,
                         onDismiss = { viewModel.setFolderPickerOpen(false) },
+                    )
+                }
+
+                if (state.newFolderDialogOpen) {
+                    NewFolderDialog(
+                        parentName = state.newFolderParent?.name,
+                        isCreating = state.isCreatingFolder,
+                        error = state.newFolderError,
+                        onCreate = viewModel::createFolder,
+                        onDismiss = viewModel::dismissNewFolderDialog,
                     )
                 }
             }
@@ -275,35 +294,70 @@ private fun TagField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FolderPickerSheet(
-    folders: List<FolderNode>,
-    selectedId: String?,
+    state: SaveUiState,
     onSelect: (FolderNode?) -> Unit,
+    onCreateIn: (FolderNode?) -> Unit,
+    onRetry: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()) {
-        LazyColumn(modifier = Modifier.heightIn(max = 420.dp)) {
+        LazyColumn(modifier = Modifier.heightIn(max = 460.dp)) {
             item {
                 FolderRow(
                     name = stringResource(R.string.save_folder_root),
                     depth = 0,
-                    selected = selectedId == null,
+                    selected = state.folderId == null,
                     onClick = { onSelect(null) },
+                    onCreateChild = { onCreateIn(null) },
                 )
             }
-            items(folders.size) { index ->
-                val node = folders[index]
+
+            items(state.folders.size) { index ->
+                val node = state.folders[index]
                 FolderRow(
                     name = node.name,
                     depth = node.depth + 1,
-                    selected = node.id == selectedId,
+                    selected = node.id == state.folderId,
                     onClick = { onSelect(node) },
+                    onCreateChild = { onCreateIn(node) },
                 )
             }
-            if (folders.isEmpty()) {
-                item {
-                    Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                        Text(stringResource(R.string.save_folders_empty))
+
+            // Three different situations used to look identical here, which is
+            // how "you have no folders" ended up being shown to people who had
+            // plenty and were simply still waiting for the request.
+            when {
+                state.foldersLoading -> item {
+                    Box(
+                        Modifier.fillMaxWidth().padding(24.dp),
+                        contentAlignment = Alignment.Center,
+                    ) { CircularProgressIndicator() }
+                }
+
+                state.foldersError != null -> item {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.save_folders_failed),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                        Text(
+                            text = state.foldersError,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        TextButton(onClick = onRetry) { Text(stringResource(R.string.action_retry)) }
                     }
+                }
+
+                state.folders.isEmpty() -> item {
+                    Box(
+                        Modifier.fillMaxWidth().padding(24.dp),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(stringResource(R.string.save_folders_empty)) }
                 }
             }
         }
@@ -311,15 +365,79 @@ private fun FolderPickerSheet(
 }
 
 @Composable
-private fun FolderRow(name: String, depth: Int, selected: Boolean, onClick: () -> Unit) {
-    TextButton(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+private fun NewFolderDialog(
+    parentName: String?,
+    isCreating: Boolean,
+    error: String?,
+    onCreate: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = { if (!isCreating) onDismiss() },
+        title = { Text(stringResource(R.string.save_folder_new_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = if (parentName == null) {
+                        stringResource(R.string.save_folder_new_at_root)
+                    } else {
+                        stringResource(R.string.save_folder_new_inside, parentName)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.save_folder_new_name)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { onCreate(name) }),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                error?.let {
+                    Text(text = it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onCreate(name) }, enabled = !isCreating && name.isNotBlank()) {
+                if (isCreating) {
+                    CircularProgressIndicator(modifier = Modifier.heightIn(max = 18.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(stringResource(R.string.save_folder_create))
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isCreating) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun FolderRow(
+    name: String,
+    depth: Int,
+    selected: Boolean,
+    onClick: () -> Unit,
+    onCreateChild: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = (depth * 16).dp),
+                .weight(1f)
+                .padding(start = (depth * 16).dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -332,6 +450,12 @@ private fun FolderRow(name: String, depth: Int, selected: Boolean, onClick: () -
                 } else {
                     MaterialTheme.colorScheme.onSurface
                 },
+            )
+        }
+        IconButton(onClick = onCreateChild) {
+            Icon(
+                imageVector = Icons.Default.CreateNewFolder,
+                contentDescription = stringResource(R.string.save_folder_new_child_of, name),
             )
         }
     }

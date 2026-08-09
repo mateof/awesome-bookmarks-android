@@ -114,27 +114,30 @@ class BookmarksApi @Inject constructor(
     suspend fun folders(baseUrl: String, token: String? = null): List<Folder> {
         val response = get(baseUrl, "/api/v1/folders", token)
         if (!response.isSuccess) throw ApiException(response.errorMessage())
-        return (response.body as? JsonArray).orEmpty().map { element ->
-            val obj = element.jsonObject
-            Folder(
-                id = obj.string("id").orEmpty(),
-                parentId = obj.string("parentId"),
-                name = obj.string("name").orEmpty(),
-            )
-        }.filter { it.id.isNotEmpty() }
+        return parseFolders(response.body)
+    }
+
+    /** Creates a folder and returns it. `parentId` null means the root. */
+    suspend fun createFolder(
+        baseUrl: String,
+        name: String,
+        parentId: String?,
+        token: String? = null,
+    ): Folder {
+        val body = buildJsonObject {
+            put("name", name)
+            put("parentId", parentId?.let { JsonPrimitiveOf(it) } ?: JsonNull)
+        }
+        val response = post(baseUrl, "/api/v1/folders", body.toString(), token)
+        if (!response.isSuccess) throw ApiException(response.errorMessage())
+        return parseFolder(response.body)
+            ?: throw ApiException("The server did not return the new folder")
     }
 
     suspend fun tags(baseUrl: String, token: String? = null): List<Tag> {
         val response = get(baseUrl, "/api/v1/tags", token)
         if (!response.isSuccess) throw ApiException(response.errorMessage())
-        return (response.body as? JsonArray).orEmpty().map { element ->
-            val obj = element.jsonObject
-            Tag(
-                id = obj.string("id").orEmpty(),
-                name = obj.string("name").orEmpty(),
-                color = obj.string("color"),
-            )
-        }.filter { it.name.isNotEmpty() }
+        return parseTags(response.body)
     }
 
     /**
@@ -230,11 +233,33 @@ sealed interface LoginResult {
 
 data class Folder(val id: String, val parentId: String?, val name: String)
 
+/**
+ * The list endpoints answer with a bare JSON array of objects keyed `id`,
+ * `parentId` and `name`. Kept as pure functions so the shape is covered by
+ * tests: a silent parsing change here shows up as "you have no folders", which
+ * looks like a server problem and is not.
+ */
+fun parseFolders(body: JsonElement?): List<Folder> =
+    (body as? JsonArray).orEmpty().mapNotNull { parseFolder(it) }
+
+fun parseFolder(body: JsonElement?): Folder? {
+    val obj = body as? JsonObject ?: return null
+    val id = obj.string("id")?.takeIf { it.isNotEmpty() } ?: return null
+    return Folder(id = id, parentId = obj.string("parentId"), name = obj.string("name").orEmpty())
+}
+
+fun parseTags(body: JsonElement?): List<Tag> =
+    (body as? JsonArray).orEmpty().mapNotNull { element ->
+        val obj = element as? JsonObject ?: return@mapNotNull null
+        val name = obj.string("name")?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+        Tag(id = obj.string("id").orEmpty(), name = name, color = obj.string("color"))
+    }
+
 data class Tag(val id: String, val name: String, val color: String?)
 
 class ApiException(message: String) : Exception(message)
 
-private fun JsonObject.string(key: String): String? =
+internal fun JsonObject.string(key: String): String? =
     this[key]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
 
 private fun JsonArray?.orEmpty(): List<JsonElement> = this ?: emptyList()

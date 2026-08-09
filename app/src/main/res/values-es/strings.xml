@@ -63,7 +63,7 @@
     <string name="save_title_field">Título</string>
     <string name="save_title_hint">Déjalo vacío y el servidor lo saca de la página.</string>
     <string name="save_folder_root">Sin carpeta (raíz)</string>
-    <string name="save_folders_empty">Aún no hay carpetas. Se guardará en la raíz.</string>
+    <string name="save_folders_empty">Aún no tienes carpetas. Usa el icono de la derecha para crear una.</string>
     <string name="save_tags">Etiquetas</string>
     <string name="save_tags_hint">Intro o una coma añade una. Las que no existan se crean.</string>
     <string name="save_tag_remove">Quitar etiqueta</string>
@@ -163,4 +163,12 @@
     <string name="save_error_token_rejected">El token de API ha sido rechazado. Crea uno nuevo y actualízalo en Ajustes.</string>
     <string name="settings_server_version">Versión del servidor %1$s</string>
     <string name="settings_server_version_unknown">Versión del servidor desconocida (necesita servidor 0.20.2 o superior)</string>
+    <!-- Selector de carpeta -->
+    <string name="save_folders_failed">No se han podido cargar tus carpetas</string>
+    <string name="save_folder_new_title">Nueva carpeta</string>
+    <string name="save_folder_new_at_root">Se creará en la raíz.</string>
+    <string name="save_folder_new_inside">Se creará dentro de %1$s.</string>
+    <string name="save_folder_new_name">Nombre de la carpeta</string>
+    <string name="save_folder_create">Crear</string>
+    <string name="save_folder_new_child_of">Nueva carpeta dentro de %1$s</string>
 </resources>

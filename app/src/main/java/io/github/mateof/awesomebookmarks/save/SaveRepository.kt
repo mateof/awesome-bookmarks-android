@@ -28,6 +28,14 @@ class SaveRepository @Inject constructor(
         buildTree(flat)
     }
 
+    /** Creates a folder, at the root when [parentId] is null. */
+    suspend fun createFolder(name: String, parentId: String?): Result<Folder> = runCatching {
+        require(name.isNotBlank()) { "A folder needs a name" }
+        sessionManager.withSession { baseUrl, token ->
+            ApiCall(httpCode = 200, value = api.createFolder(baseUrl, name.trim(), parentId, token))
+        }
+    }
+
     suspend fun tags(): Result<List<Tag>> = runCatching {
         sessionManager.withSession { baseUrl, token ->
             ApiCall(httpCode = 200, value = api.tags(baseUrl, token))
