@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0]
+
+### Changed
+- The folder picker starts **collapsed** and you open branches as you need them.
+  Showing an entire tree expanded is unusable past a handful of folders. The
+  branch containing the preselected folder is opened automatically so a
+  remembered choice is never hidden under a closed parent.
+
+### Added
+- A search box in the folder picker. It filters by folder name or by path and
+  lists matches flat, each with its path, since the path is what tells two
+  folders with the same name apart.
+
 ## [0.2.1]
 
 ### Fixed
@@ -92,7 +105,8 @@ First release.
 - In app updates from GitHub releases, with a daily background check.
 - English and Spanish translations.
 
-[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.3.0
 [0.2.1]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.2.1
 [0.2.0]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.2.0
 [0.1.2]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.1.2

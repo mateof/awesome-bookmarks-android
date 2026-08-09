@@ -171,4 +171,9 @@
     <string name="save_folder_new_name">Nombre de la carpeta</string>
     <string name="save_folder_create">Crear</string>
     <string name="save_folder_new_child_of">Nueva carpeta dentro de %1$s</string>
+    <string name="save_folder_search">Buscar carpetas</string>
+    <string name="save_folder_search_clear">Borrar búsqueda</string>
+    <string name="save_folder_no_matches">Ninguna carpeta coincide</string>
+    <string name="save_folder_expand">Desplegar</string>
+    <string name="save_folder_collapse">Plegar</string>
 </resources>

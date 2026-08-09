@@ -10,7 +10,7 @@ The sheet has:
 
 - **URL**, editable, validated before sending.
 - **Title**, prefilled from the share. Left empty, the server reads it from the page itself.
-- **Folder**, your whole tree flattened into an indented list, preselected to the last folder you saved to. Every row has an icon to create a folder inside it, and the root row creates one at the top level; the new folder is selected immediately. While the list is loading the sheet says so, and if it cannot be read it says that too with a retry, rather than claiming you have no folders.
+- **Folder**, your tree, **collapsed**, with only the top level showing until you open a branch. The branch holding your preselected folder opens by itself, so a remembered choice is never hidden. A search box above the list filters by name or by path and lists the matches flat, each with its path, because once two folders are called "Rust" the path is the only thing that tells them apart. Every row has an icon to create a folder inside it, and the root row creates one at the top level; the new folder is selected immediately. While the list is loading the sheet says so, and if it cannot be read it says that too with a retry, rather than claiming you have no folders.
 - **Tags**, autocompleting against your existing tags. Enter or a comma commits one. Tags that do not exist are created by the server.
 
 It posts to `/api/ext/quick-add`, the same endpoint the browser extension uses. That endpoint takes tag **names** and creates the missing ones, unlike `POST /api/v1/bookmarks` which takes ids and would mean a create-then-link round trip for every new tag typed.

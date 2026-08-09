@@ -171,4 +171,9 @@
     <string name="save_folder_new_name">Folder name</string>
     <string name="save_folder_create">Create</string>
     <string name="save_folder_new_child_of">New folder inside %1$s</string>
+    <string name="save_folder_search">Search folders</string>
+    <string name="save_folder_search_clear">Clear search</string>
+    <string name="save_folder_no_matches">No folder matches that</string>
+    <string name="save_folder_expand">Expand</string>
+    <string name="save_folder_collapse">Collapse</string>
 </resources>

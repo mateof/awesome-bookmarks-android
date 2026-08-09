@@ -56,7 +56,23 @@ class SaveBookmarkViewModel @Inject constructor(
         it.copy(folderId = node?.id, folderName = node?.name.orEmpty(), folderPickerOpen = false)
     }
 
-    fun setFolderPickerOpen(open: Boolean) = _state.update { it.copy(folderPickerOpen = open) }
+    fun setFolderPickerOpen(open: Boolean) = _state.update {
+        // The query is per visit: reopening the picker should not resume
+        // someone else's half typed search.
+        it.copy(folderPickerOpen = open, folderQuery = "")
+    }
+
+    fun toggleFolderExpanded(id: String) = _state.update {
+        it.copy(
+            expandedFolders = if (id in it.expandedFolders) {
+                it.expandedFolders - id
+            } else {
+                it.expandedFolders + id
+            },
+        )
+    }
+
+    fun onFolderQueryChanged(query: String) = _state.update { it.copy(folderQuery = query) }
 
     fun onTagInputChanged(input: String) = _state.update { it.copy(tagInput = input) }
 
@@ -106,7 +122,16 @@ class SaveBookmarkViewModel @Inject constructor(
         viewModelScope.launch {
             saveRepository.folders()
                 .onSuccess { folders ->
-                    _state.update { it.copy(folders = folders, foldersLoading = false) }
+                    _state.update {
+                        it.copy(
+                            folders = folders,
+                            foldersLoading = false,
+                            // Open the branch holding the preselected folder,
+                            // otherwise the remembered choice is invisible under
+                            // collapsed parents.
+                            expandedFolders = it.expandedFolders + ancestorsOf(it.folderId, folders),
+                        )
+                    }
                 }
                 .onFailure { throwable ->
                     // Reported in the picker rather than as a global error: not
@@ -171,6 +196,18 @@ class SaveBookmarkViewModel @Inject constructor(
         }
     }
 
+    /** Ids of every folder between the root and [folderId], exclusive. */
+    private fun ancestorsOf(folderId: String?, folders: List<FolderNode>): Set<String> {
+        if (folderId == null) return emptySet()
+        val byId = folders.associateBy { it.id }
+        val result = mutableSetOf<String>()
+        var parent = byId[folderId]?.parentId
+        while (parent != null && result.add(parent)) {
+            parent = byId[parent]?.parentId
+        }
+        return result
+    }
+
     private fun Throwable.toSaveError(): SaveError = when {
         this is SessionException && problem == SessionProblem.NOT_CONFIGURED -> SaveError.NOT_CONFIGURED
         this is SessionException && problem == SessionProblem.UNREACHABLE -> SaveError.UNREACHABLE
@@ -187,6 +224,8 @@ data class SaveUiState(
     val folderName: String = "",
     val folders: List<FolderNode> = emptyList(),
     val foldersLoading: Boolean = true,
+    val expandedFolders: Set<String> = emptySet(),
+    val folderQuery: String = "",
     /** Why the folder list could not be read. Null when it could. */
     val foldersError: String? = null,
     val folderPickerOpen: Boolean = false,
@@ -204,6 +243,42 @@ data class SaveUiState(
     val error: SaveError? = null,
     val errorDetail: String = "",
 ) {
+    /**
+     * What the picker draws.
+     *
+     * While searching, the tree is set aside and every match is listed flat
+     * with its path, because "which Rust folder is this" is the actual question
+     * once names repeat. Otherwise a single pre-order pass hides everything
+     * below a collapsed row: rows are sorted parent before child, so once a
+     * collapsed row is seen, anything deeper belongs to it until the depth
+     * comes back down.
+     */
+    val visibleFolders: List<FolderNode>
+        get() {
+            val query = folderQuery.trim()
+            if (query.isNotEmpty()) {
+                return folders.filter {
+                    it.name.contains(query, ignoreCase = true) ||
+                        it.path.contains(query, ignoreCase = true)
+                }
+            }
+
+            val visible = mutableListOf<FolderNode>()
+            var hideDeeperThan = Int.MAX_VALUE
+            for (node in folders) {
+                if (node.depth > hideDeeperThan) continue
+                visible += node
+                hideDeeperThan = if (node.hasChildren && node.id !in expandedFolders) {
+                    node.depth
+                } else {
+                    Int.MAX_VALUE
+                }
+            }
+            return visible
+        }
+
+    val isSearchingFolders: Boolean get() = folderQuery.isNotBlank()
+
     /** Known tags matching what is being typed, minus the ones already added. */
     val tagSuggestions: List<Tag>
         get() {

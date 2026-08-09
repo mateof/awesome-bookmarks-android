@@ -72,25 +72,36 @@ class SaveRepository @Inject constructor(
     }
 
     /**
-     * The API returns folders flat with a `parentId`; the picker wants them
-     * ordered and indented, so the tree is built here once.
+     * The API returns folders flat with a `parentId`; the picker wants them in
+     * pre-order with a depth, so the tree is built here once.
+     *
+     * Pre-order matters: it lets the picker decide what is visible in a single
+     * pass, hiding everything deeper than a collapsed row until the depth drops
+     * back, without walking ancestor chains per row.
      */
     private fun buildTree(flat: List<Folder>): List<FolderNode> {
         val childrenOf = flat.groupBy { it.parentId }
         val result = mutableListOf<FolderNode>()
 
-        fun walk(parentId: String?, depth: Int) {
+        fun walk(parentId: String?, depth: Int, path: List<String>) {
             childrenOf[parentId]
                 ?.sortedBy { it.name.lowercase() }
                 ?.forEach { folder ->
-                    result += FolderNode(folder.id, folder.name, depth)
+                    result += FolderNode(
+                        id = folder.id,
+                        name = folder.name,
+                        depth = depth,
+                        parentId = folder.parentId,
+                        hasChildren = !childrenOf[folder.id].isNullOrEmpty(),
+                        path = path.joinToString(" / "),
+                    )
                     // Depth is capped only by the data; a cycle would loop, but
                     // the server rejects moves that would create one.
-                    walk(folder.id, depth + 1)
+                    walk(folder.id, depth + 1, path + folder.name)
                 }
         }
 
-        walk(null, 0)
+        walk(null, 0, emptyList())
         return result
     }
 
@@ -98,7 +109,15 @@ class SaveRepository @Inject constructor(
         Patterns.WEB_URL.matcher(candidate.trim()).matches()
 }
 
-data class FolderNode(val id: String, val name: String, val depth: Int)
+data class FolderNode(
+    val id: String,
+    val name: String,
+    val depth: Int,
+    val parentId: String?,
+    val hasChildren: Boolean,
+    /** Ancestors joined for display, empty at the root. */
+    val path: String,
+)
 
 /**
  * Browsers share a page as "Title https://url", or sometimes just the URL.
