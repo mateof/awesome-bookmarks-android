@@ -6,7 +6,7 @@ The web interface already works in a mobile browser. What a browser tab cannot d
 
 [![CI](https://github.com/mateof/awesome-bookmarks-android/actions/workflows/ci.yml/badge.svg)](https://github.com/mateof/awesome-bookmarks-android/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/mateof/awesome-bookmarks-android?include_prereleases&sort=semver)](https://github.com/mateof/awesome-bookmarks-android/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![minSdk](https://img.shields.io/badge/minSdk-26-brightgreen)](app/build.gradle.kts)
 
 ---
@@ -94,4 +94,13 @@ JDK 17 and the Android SDK (compileSdk 35). Put `sdk.dir` in `local.properties` 
 
 ## License
 
-[MIT](LICENSE).
+This program is free software: you can redistribute it and/or modify it under
+the terms of the **GNU General Public License** as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version. See [LICENSE](LICENSE).
+
+It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY,
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
+Every dependency is Apache-2.0, which is compatible with GPL-3.0.
