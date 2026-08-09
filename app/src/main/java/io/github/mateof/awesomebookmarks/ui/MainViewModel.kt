@@ -62,7 +62,11 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = MainUiState.Loading
             _uiState.value = when (val result = sessionManager.prepare()) {
-                is SessionResult.Ready -> MainUiState.Connected(result.baseUrl)
+                is SessionResult.Ready -> {
+                    // Cheap and best effort, so Settings has something to show.
+                    launch { runCatching { sessionManager.refreshServerVersion() } }
+                    MainUiState.Connected(result.baseUrl)
+                }
                 SessionResult.NotConfigured -> MainUiState.NeedsSignIn(currentSettings)
                 is SessionResult.Unreachable -> MainUiState.Unreachable(result.triedUrls)
                 is SessionResult.SignInRequired -> result.toSignInState()

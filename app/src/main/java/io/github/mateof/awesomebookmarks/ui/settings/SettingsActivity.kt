@@ -52,6 +52,7 @@ class SettingsActivity : ComponentActivity() {
                 val settings by viewModel.settings.collectAsStateWithLifecycle()
                 val signedOut by viewModel.signedOut.collectAsStateWithLifecycle()
                 val updateState by updateViewModel.state.collectAsStateWithLifecycle()
+                val tokenFeedback by viewModel.tokenFeedback.collectAsStateWithLifecycle()
 
                 LaunchedEffect(signedOut) { if (signedOut) finish() }
 
@@ -78,6 +79,7 @@ class SettingsActivity : ComponentActivity() {
                             webViewInfo = remember { WebViewInfo.of(this@SettingsActivity) },
                             biometricsAvailable = remember { AppLock.isAvailable(this@SettingsActivity) },
                             updateState = updateState,
+                            tokenFeedback = tokenFeedback,
                             callbacks = SettingsCallbacks(
                                 onBack = { finish() },
                                 onServerChanged = viewModel::setServer,
@@ -91,6 +93,8 @@ class SettingsActivity : ComponentActivity() {
                                 onTextZoomChanged = viewModel::setTextZoom,
                                 onExternalLinksChanged = viewModel::setOpenExternalLinks,
                                 onMixedContentChanged = viewModel::setAllowMixedContent,
+                                onSaveToken = viewModel::saveApiToken,
+                                onClearToken = viewModel::clearApiToken,
                                 onUpdateChecksChanged = ::onUpdateChecksChanged,
                                 onCheckUpdates = { updateViewModel.check(force = true) },
                                 onDownloadUpdate = updateViewModel::download,

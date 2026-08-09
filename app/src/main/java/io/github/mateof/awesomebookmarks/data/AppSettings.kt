@@ -46,6 +46,16 @@ data class AppSettings(
 
     /** Save immediately on share, with no sheet, using the remembered folder. */
     val oneTapSave: Boolean = false,
+
+    /**
+     * Whether an API token is stored. The token itself lives in [SecretStore];
+     * this mirror exists so the UI can react to it through the same flow as
+     * everything else.
+     */
+    val apiTokenConfigured: Boolean = false,
+
+    /** Last version reported by the server, shown in Settings. */
+    val serverVersion: String = "",
 ) {
     val isConfigured: Boolean get() = primaryUrl.isNotBlank()
 

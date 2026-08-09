@@ -32,10 +32,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.mateof.awesomebookmarks.R
 import io.github.mateof.awesomebookmarks.data.AppSettings
+import io.github.mateof.awesomebookmarks.network.TokenResult
 import io.github.mateof.awesomebookmarks.update.UpdateSection
 import io.github.mateof.awesomebookmarks.update.UpdateUiState
 import io.github.mateof.awesomebookmarks.util.WebViewInfo
@@ -48,6 +50,7 @@ fun SettingsScreen(
     webViewInfo: WebViewInfo,
     biometricsAvailable: Boolean,
     updateState: UpdateUiState,
+    tokenFeedback: TokenResult?,
     callbacks: SettingsCallbacks,
 ) {
     var showSignOutDialog by remember { mutableStateOf(false) }
@@ -80,6 +83,10 @@ fun SettingsScreen(
                 Caption(stringResource(R.string.settings_session_explainer))
                 HorizontalDivider()
             }
+
+            item { SectionHeader(stringResource(R.string.settings_section_token)) }
+            item { ApiTokenSection(settings, tokenFeedback, callbacks) }
+            item { HorizontalDivider() }
 
             item { SectionHeader(stringResource(R.string.settings_section_security)) }
             item {
@@ -185,6 +192,13 @@ fun SettingsScreen(
             item {
                 Caption(stringResource(R.string.settings_app_version, appVersion))
                 Caption(
+                    if (settings.serverVersion.isBlank()) {
+                        stringResource(R.string.settings_server_version_unknown)
+                    } else {
+                        stringResource(R.string.settings_server_version, settings.serverVersion)
+                    },
+                )
+                Caption(
                     stringResource(
                         R.string.settings_webview_version,
                         webViewInfo.versionName ?: stringResource(R.string.settings_webview_unknown),
@@ -245,6 +259,67 @@ private fun ServerSection(settings: AppSettings, callbacks: SettingsCallbacks) {
         ) { Text(stringResource(R.string.settings_save_server)) }
         if (settings.lastGoodUrl.isNotBlank()) {
             Caption(stringResource(R.string.settings_active_url, settings.lastGoodUrl))
+        }
+    }
+}
+
+@Composable
+private fun ApiTokenSection(
+    settings: AppSettings,
+    feedback: TokenResult?,
+    callbacks: SettingsCallbacks,
+) {
+    var token by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.settings_token_when),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        if (settings.apiTokenConfigured) {
+            Text(
+                text = stringResource(R.string.settings_token_present),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            OutlinedButton(onClick = callbacks.onClearToken) {
+                Text(stringResource(R.string.settings_token_clear))
+            }
+        }
+
+        OutlinedTextField(
+            value = token,
+            onValueChange = { token = it },
+            label = { Text(stringResource(R.string.settings_token_field)) },
+            supportingText = { Text(stringResource(R.string.settings_token_explainer)) },
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedButton(
+            onClick = {
+                callbacks.onSaveToken(token)
+                token = ""
+            },
+            enabled = token.isNotBlank(),
+        ) { Text(stringResource(R.string.settings_token_save)) }
+
+        feedback?.let {
+            val (message, isError) = when (it) {
+                TokenResult.Saved -> stringResource(R.string.settings_token_saved) to false
+                TokenResult.Invalid -> stringResource(R.string.settings_token_invalid) to true
+                TokenResult.Unreachable -> stringResource(R.string.settings_token_unreachable) to true
+            }
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+            )
         }
     }
 }
@@ -349,6 +424,8 @@ data class SettingsCallbacks(
     val onTextZoomChanged: (Int) -> Unit,
     val onExternalLinksChanged: (Boolean) -> Unit,
     val onMixedContentChanged: (Boolean) -> Unit,
+    val onSaveToken: (String) -> Unit,
+    val onClearToken: () -> Unit,
     val onUpdateChecksChanged: (Boolean) -> Unit,
     val onCheckUpdates: () -> Unit,
     val onDownloadUpdate: () -> Unit,

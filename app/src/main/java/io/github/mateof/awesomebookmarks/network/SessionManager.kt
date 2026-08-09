@@ -19,11 +19,17 @@ import javax.inject.Singleton
  * holds it in memory only, dropping it after roughly 30 idle minutes. After
  * that a perfectly valid cookie starts getting `423 Locked`.
  *
- * An API token would dodge that (its row carries a wrapped copy of the key),
- * but a token cannot give the WebView a session, and the WebView is the whole
- * app. So the password is kept, encrypted under a Keystore key, and replayed
- * whenever the server answers 401 or 423. One credential, one login screen,
- * and the share target keeps working after days of not opening the app.
+ * An API token dodges that (its row carries a wrapped copy of the key), but a
+ * token cannot give the WebView a session, and the WebView is the library. So
+ * the default is one credential: the password, encrypted under a Keystore key
+ * and replayed whenever the server answers 401 or 423.
+ *
+ * That replay is impossible for an account with two-factor authentication or a
+ * passkey: the server demands a fresh code on every login unless the request
+ * comes from a trusted network, and a passkey ceremony cannot happen in the
+ * background at all. For those accounts an API token is not a redundant second
+ * credential, it is the only thing that keeps the share target working. Store
+ * one in Settings and every native call uses it instead.
  */
 @Singleton
 class SessionManager @Inject constructor(
@@ -36,6 +42,11 @@ class SessionManager @Inject constructor(
 
     @Volatile
     var activeBaseUrl: String? = null
+        private set
+
+    /** True when the last silent renewal failed only because of a second factor. */
+    @Volatile
+    var lastRenewalNeededSecondFactor: Boolean = false
         private set
 
     /** Resolves a reachable server and guarantees a usable session on it. */
@@ -81,8 +92,10 @@ class SessionManager @Inject constructor(
         }
     }
 
-    /** Ends everything: server session, cookies and stored credentials. */
+    /** Ends everything: server session, cookies, credentials and token. */
     suspend fun signOut() = mutex.withLock {
+        secrets.clearApiToken()
+        settings.setApiTokenConfigured(false)
         activeBaseUrl?.let { runCatching { api.logout(it) } }
         cookieJar.clear()
         secrets.clear()
@@ -101,7 +114,24 @@ class SessionManager @Inject constructor(
      * signs in again once and retries. This is what keeps the share target
      * working when the app has not been opened in days.
      */
-    suspend fun <T> withSession(block: suspend (baseUrl: String) -> ApiCall<T>): T {
+    suspend fun <T> withSession(block: suspend (baseUrl: String, token: String?) -> ApiCall<T>): T {
+        val token = secrets.readApiToken()
+
+        // With a token there is nothing to prepare: it authenticates on its own
+        // and never goes stale, so we only need to find a reachable address.
+        if (!token.isNullOrBlank()) {
+            val settings = settings.current()
+            if (!settings.isConfigured) throw SessionException(SessionProblem.NOT_CONFIGURED)
+            val baseUrl = settings.candidateUrls.firstOrNull { api.isServerReachable(it) }
+                ?: throw SessionException(SessionProblem.UNREACHABLE)
+            activeBaseUrl = baseUrl
+            val result = block(baseUrl, token)
+            // A token only stops working when it is revoked, and no amount of
+            // retrying fixes that.
+            if (result.httpCode == 401) throw SessionException(SessionProblem.TOKEN_REJECTED)
+            return result.valueOrThrow()
+        }
+
         val baseUrl = when (val prepared = prepare()) {
             is SessionResult.Ready -> prepared.baseUrl
             SessionResult.NotConfigured -> throw SessionException(SessionProblem.NOT_CONFIGURED)
@@ -109,12 +139,41 @@ class SessionManager @Inject constructor(
             is SessionResult.SignInRequired -> throw SessionException(SessionProblem.SIGN_IN_REQUIRED)
         }
 
-        val first = block(baseUrl)
+        val first = block(baseUrl, null)
         if (!first.needsFreshSession) return first.valueOrThrow()
 
         Log.i(TAG, "Session rejected (${first.httpCode}), signing in again")
         if (!renew(baseUrl)) throw SessionException(SessionProblem.SIGN_IN_REQUIRED)
-        return block(baseUrl).valueOrThrow()
+        return block(baseUrl, null).valueOrThrow()
+    }
+
+    /** Validates a token before storing it, so a typo fails here and not later. */
+    suspend fun saveApiToken(token: String): TokenResult {
+        val trimmed = token.trim()
+        if (trimmed.isEmpty()) return TokenResult.Invalid
+        val baseUrl = activeBaseUrl
+            ?: settings.current().candidateUrls.firstOrNull { api.isServerReachable(it) }
+            ?: return TokenResult.Unreachable
+        val response = api.me(baseUrl, trimmed)
+        return if (response.isSuccess) {
+            secrets.writeApiToken(trimmed)
+            settings.setApiTokenConfigured(true)
+            TokenResult.Saved
+        } else {
+            TokenResult.Invalid
+        }
+    }
+
+    suspend fun clearApiToken() {
+        secrets.clearApiToken()
+        settings.setApiTokenConfigured(false)
+    }
+
+    /** Best effort: an older server has no version endpoint and answers 404. */
+    suspend fun refreshServerVersion() {
+        val baseUrl = activeBaseUrl ?: return
+        val version = runCatching { api.serverVersion(baseUrl, secrets.readApiToken()) }.getOrNull()
+        settings.setServerVersion(version.orEmpty())
     }
 
     private suspend fun ensureSignedIn(baseUrl: String): SessionResult {
@@ -127,17 +186,28 @@ class SessionManager @Inject constructor(
         if (!secrets.hasCredentials()) {
             return SessionResult.SignInRequired(baseUrl, SignInProblem.NO_CREDENTIALS_STORED)
         }
-        return if (renewLocked(baseUrl)) {
-            SessionResult.Ready(baseUrl)
-        } else {
-            SessionResult.SignInRequired(baseUrl, SignInProblem.INVALID_CREDENTIALS)
+        return when {
+            renewLocked(baseUrl) -> SessionResult.Ready(baseUrl)
+            lastRenewalNeededSecondFactor ->
+                SessionResult.SignInRequired(baseUrl, SignInProblem.TWO_FACTOR_REQUIRED)
+
+            else -> SessionResult.SignInRequired(baseUrl, SignInProblem.INVALID_CREDENTIALS)
         }
     }
 
     /** Caller must already hold [mutex]. */
+    /**
+     * Caller must already hold [mutex].
+     *
+     * A `TwoFactorRequired` here is not a wrong password: the account has a
+     * second factor and the server wants a fresh code, which no background
+     * replay can produce. It is recorded so the UI can say so and point at the
+     * API token instead of implying the password is wrong.
+     */
     private suspend fun renewLocked(baseUrl: String): Boolean {
         val credentials = secrets.readCredentials() ?: return false
         val result = api.login(baseUrl, credentials.identifier, credentials.password)
+        lastRenewalNeededSecondFactor = result == LoginResult.TwoFactorRequired
         if (result != LoginResult.Success) {
             Log.w(TAG, "Silent sign in rejected: $result")
         }
@@ -184,6 +254,12 @@ enum class SignInProblem {
     SERVER_ERROR,
 }
 
-enum class SessionProblem { NOT_CONFIGURED, UNREACHABLE, SIGN_IN_REQUIRED }
+enum class SessionProblem { NOT_CONFIGURED, UNREACHABLE, SIGN_IN_REQUIRED, TOKEN_REJECTED }
 
 class SessionException(val problem: SessionProblem) : Exception(problem.name)
+
+sealed interface TokenResult {
+    data object Saved : TokenResult
+    data object Invalid : TokenResult
+    data object Unreachable : TokenResult
+}

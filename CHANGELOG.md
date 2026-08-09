@@ -6,6 +6,30 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0]
+
+### Added
+- **Optional API token** (Settings → API token). Accounts with two-factor
+  authentication or a passkey cannot have their sign in replayed in the
+  background, so the session died about every half hour of inactivity and the
+  share target stopped working. A token carries its own copy of the account's
+  encryption key: when one is stored every native call uses it and saving keeps
+  working from any network. Verified against the server before being stored.
+- **Passkey sign in**, where the server allows it. A WebView refuses WebAuthn
+  unless the app opts in, so this was silently impossible before. Needs the
+  server configured with `WEBAUTHN_RP_ID` and `WEBAUTHN_ORIGIN`, over HTTPS,
+  with a real hostname.
+- **Server version in Settings → About**, read from `GET /api/v1/version`.
+  Servers older than 0.20.2 do not have it and are reported as unknown.
+
+### Fixed
+- A failed background sign in caused by a second factor no longer looks like a
+  wrong password. It says what it is and points at the API token.
+
+### Changed
+- androidx.webkit 1.12.1 to 1.16.0. The WebAuthn constants exist in 1.12.1 but
+  are not yet accepted by `isFeatureSupported`, so calling it there is not valid.
+
 ## [0.1.2]
 
 ### Changed
@@ -54,7 +78,8 @@ First release.
 - In app updates from GitHub releases, with a daily background check.
 - English and Spanish translations.
 
-[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.2.0
 [0.1.2]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.1.2
 [0.1.1]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.1.1
 [0.1.0]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.1.0

@@ -148,4 +148,19 @@
     <string name="settings_webview_unknown">unknown</string>
     <string name="settings_webview_outdated_hint">This WebView is older than Chromium 108 and may render the interface incorrectly.</string>
     <string name="settings_disclaimer">Companion app for the AwesomeBookmarks server.</string>
+    <!-- API token -->
+    <string name="settings_section_token">API token (optional)</string>
+    <string name="settings_token_field">Paste a token</string>
+    <string name="settings_token_explainer">Create one in the web app under Settings → API. It carries its own copy of your encryption key, so background saving keeps working without your password and without a second factor.</string>
+    <string name="settings_token_when">You need one if your account uses two-factor authentication or a passkey. Without it the app cannot renew the session on its own and sharing a link will start failing after about half an hour.</string>
+    <string name="settings_token_present">A token is stored and every save uses it.</string>
+    <string name="settings_token_save">Save token</string>
+    <string name="settings_token_clear">Remove token</string>
+    <string name="settings_token_saved">Token verified and saved</string>
+    <string name="settings_token_invalid">The server rejected that token</string>
+    <string name="settings_token_unreachable">Cannot reach the server to check the token</string>
+    <string name="signin_totp_background_note">Heads up: with two-factor authentication the app cannot sign in again by itself, so saving links in the background will stop working after a while. Add an API token in Settings to avoid that.</string>
+    <string name="save_error_token_rejected">The API token was rejected. Create a new one and update it in Settings.</string>
+    <string name="settings_server_version">Server version %1$s</string>
+    <string name="settings_server_version_unknown">Server version unknown (needs server 0.20.2 or newer)</string>
 </resources>

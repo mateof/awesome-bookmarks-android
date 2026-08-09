@@ -22,15 +22,15 @@ class SaveRepository @Inject constructor(
     private val settingsRepository: SettingsRepository,
 ) {
     suspend fun folders(): Result<List<FolderNode>> = runCatching {
-        val flat = sessionManager.withSession { baseUrl ->
-            ApiCall(httpCode = 200, value = api.folders(baseUrl))
+        val flat = sessionManager.withSession { baseUrl, token ->
+            ApiCall(httpCode = 200, value = api.folders(baseUrl, token))
         }
         buildTree(flat)
     }
 
     suspend fun tags(): Result<List<Tag>> = runCatching {
-        sessionManager.withSession { baseUrl ->
-            ApiCall(httpCode = 200, value = api.tags(baseUrl))
+        sessionManager.withSession { baseUrl, token ->
+            ApiCall(httpCode = 200, value = api.tags(baseUrl, token))
         }.sortedBy { it.name.lowercase() }
     }
 
@@ -49,8 +49,8 @@ class SaveRepository @Inject constructor(
             .filter { it.isNotEmpty() }
             .distinctBy { it.lowercase() }
 
-        sessionManager.withSession { baseUrl ->
-            val response = api.quickAdd(baseUrl, url, title, folderId, allTags)
+        sessionManager.withSession { baseUrl, token ->
+            val response = api.quickAdd(baseUrl, url, title, folderId, allTags, token)
             ApiCall(
                 httpCode = response.httpCode,
                 value = if (response.isSuccess) Unit else null,

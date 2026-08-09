@@ -23,6 +23,7 @@ The web interface already works in a mobile browser. What a browser tab cannot d
 | Biometric lock in front of your library | No | Optional, on by default |
 | Automatic LAN then VPN fallback | No | Yes |
 | Tells you when a new version ships | No | Yes, with one tap to install |
+| Sign in with a passkey | Yes | Yes, where the server allows it |
 | HTML export downloads | Usually fail silently | Saved to Downloads |
 
 Everything else, the whole library UI, is your server's own web app in a WebView. This app does not reimplement it.
@@ -61,6 +62,8 @@ The server keeps your data encrypted and derives the decryption key from your pa
 An API token would sidestep that, but a token cannot give the WebView a session and the WebView is most of the app. So the password is stored encrypted under an Android Keystore key and replayed automatically whenever the server answers 401 or 423. One login, and the share target still works after days of not opening the app.
 
 That means the phone holds a credential to your whole library, which is why the **biometric app lock is on by default**. See [SECURITY.md](SECURITY.md).
+
+**If your account uses two-factor authentication or a passkey**, that replay cannot work: the server wants a fresh code every time, and a passkey ceremony cannot run in the background. Paste an API token (web app → Settings → API) into **Settings → API token** and background saving keeps working. Details in [docs/FEATURES.md](docs/FEATURES.md).
 
 One consequence worth knowing: **sign out from the app's Settings, not from the web interface inside it.** Signing out in the web UI only clears the cookie, and the app will helpfully sign you straight back in.
 

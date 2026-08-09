@@ -59,6 +59,8 @@ class SettingsRepository @Inject constructor(
     suspend fun setRememberLastFolder(enabled: Boolean) = edit { it[Keys.REMEMBER_FOLDER] = enabled }
     suspend fun setAlwaysTags(tags: String) = edit { it[Keys.ALWAYS_TAGS] = tags }
     suspend fun setOneTapSave(enabled: Boolean) = edit { it[Keys.ONE_TAP_SAVE] = enabled }
+    suspend fun setApiTokenConfigured(present: Boolean) = edit { it[Keys.API_TOKEN_SET] = present }
+    suspend fun setServerVersion(version: String) = edit { it[Keys.SERVER_VERSION] = version }
 
     suspend fun clearServer() = edit {
         it.remove(Keys.PRIMARY_URL)
@@ -92,6 +94,8 @@ class SettingsRepository @Inject constructor(
         rememberLastFolder = this[Keys.REMEMBER_FOLDER] ?: true,
         alwaysTags = this[Keys.ALWAYS_TAGS].orEmpty(),
         oneTapSave = this[Keys.ONE_TAP_SAVE] ?: false,
+        apiTokenConfigured = this[Keys.API_TOKEN_SET] ?: false,
+        serverVersion = this[Keys.SERVER_VERSION].orEmpty(),
     )
 
     private object Keys {
@@ -114,6 +118,8 @@ class SettingsRepository @Inject constructor(
         val REMEMBER_FOLDER = booleanPreferencesKey("remember_folder")
         val ALWAYS_TAGS = stringPreferencesKey("always_tags")
         val ONE_TAP_SAVE = booleanPreferencesKey("one_tap_save")
+        val API_TOKEN_SET = booleanPreferencesKey("api_token_set")
+        val SERVER_VERSION = stringPreferencesKey("server_version")
     }
 }
 

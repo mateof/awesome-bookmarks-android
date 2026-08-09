@@ -53,6 +53,24 @@ class SecretStore @Inject constructor(
 
     fun hasCredentials(): Boolean = prefs.contains(KEY_PASSWORD)
 
+    /**
+     * Optional API token. Unlike the password it carries a wrapped copy of the
+     * account's encryption key, so it needs no second factor and survives the
+     * server dropping that key. It is the only way background saving can work
+     * for an account with two-factor authentication or a passkey.
+     */
+    fun readApiToken(): String? = read(KEY_API_TOKEN)
+
+    fun writeApiToken(token: String) {
+        prefs.edit().putString(KEY_API_TOKEN, encrypt(token)).apply()
+    }
+
+    fun clearApiToken() {
+        prefs.edit().remove(KEY_API_TOKEN).apply()
+    }
+
+    fun hasApiToken(): Boolean = prefs.contains(KEY_API_TOKEN)
+
     private fun read(key: String): String? {
         val stored = prefs.getString(key, null) ?: return null
         return runCatching { decrypt(stored) }
@@ -112,6 +130,7 @@ class SecretStore @Inject constructor(
         const val PREFS_NAME = "awesome_bookmarks_secrets"
         const val KEY_IDENTIFIER = "account_identifier"
         const val KEY_PASSWORD = "account_password"
+        const val KEY_API_TOKEN = "api_token"
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
         const val KEY_ALIAS = "awesome_bookmarks_secret_key"
         const val TRANSFORMATION = "AES/GCM/NoPadding"

@@ -34,6 +34,44 @@ Two consequences:
 - **Sign out from the app's Settings, not from the web interface.** The web sign out only clears the cookie; the app will sign back in within seconds. Settings → Sign out deletes the stored password, which is what actually ends it.
 - The Keystore key is created with `setUserAuthenticationRequired(false)` on purpose, so the share target works while the app is locked. The gate is the app lock, not the key.
 
+## Two-factor accounts and passkeys need an API token
+
+The section above works by replaying your password. That is impossible for an
+account with a second factor: the server demands a fresh TOTP code on every
+login unless the request comes from a network listed in `TRUSTED_NETWORKS`. A
+passkey is worse, since its ceremony cannot happen in the background at all.
+
+Without help, such an account gets signed out roughly every half hour of
+inactivity and **the share target stops working**.
+
+The fix is an API token, created in the web app under **Settings → API** and
+pasted into **Settings → API token** here. A token carries its own wrapped copy
+of your encryption key, so it needs no password, no code and no ceremony, and
+it never goes stale. When one is stored, every native call uses it: folders,
+tags and saving a link. The WebView still uses the session cookie.
+
+This is worth stating plainly because the app was designed the other way round
+at first. One credential is the right default; it is the wrong answer the
+moment a second factor exists.
+
+The token is verified against the server before being stored, so a bad paste
+fails immediately rather than at the next save. Signing out deletes it.
+
+## Signing in with a passkey
+
+Supported where the server supports it. A WebView refuses WebAuthn unless the
+app opts in, which is why passwordless sign in silently does nothing in most
+wrapper apps; this one calls `WebSettingsCompat.setWebAuthenticationSupport`
+with `WEB_AUTHENTICATION_SUPPORT_FOR_APP`, scoping credentials to this app.
+
+The server side has requirements the app cannot satisfy for you: `WEBAUTHN_RP_ID`
+and `WEBAUTHN_ORIGIN` configured, HTTPS, and a **real hostname**, because
+WebAuthn forbids IP addresses as relying party ids. Over `http://192.168.x.x`
+there is nothing to enable.
+
+A passkey signs the WebView in. It cannot renew the session in the background,
+so pair it with an API token exactly as with two-factor authentication.
+
 ## Biometric app lock
 
 **On by default**, because a stored password to your whole library deserves one. Biometrics or the device PIN, whichever the device offers, re-armed after 60 seconds in the background so picking a file does not prompt twice.
@@ -68,9 +106,14 @@ The GitHub client is a **separate** `OkHttpClient`. The one used for your server
 | Open external links in the browser | On | Links to other sites open in a Custom Tab instead of hijacking the app |
 | Allow mixed content | Off | Last resort for an HTTPS server loading assets over plain http |
 
+## Seeing what the server runs
+
+**Settings → About** shows the server version, read from `GET /api/v1/version`.
+That endpoint landed in server 0.20.2; against anything older the app says the
+version is unknown rather than inventing one.
+
 ## Deliberately not implemented
 
 - **Offline queueing of saves.** A share while offline fails rather than sitting in a queue. Worth doing, not done.
 - **A native library UI.** The web app already is one, and reimplementing folders, snapshots, search and five view modes natively would be a permanent chase.
-- **API token authentication.** A token would survive the server's key eviction on its own, but it cannot give the WebView a session, so it would mean two credentials for no gain.
 - **Ignoring TLS errors.** Install your CA instead.

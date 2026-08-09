@@ -64,9 +64,22 @@ The app trusts **user installed certificate authorities** (`res/xml/network_secu
 
 There is deliberately no "ignore certificate errors" switch. A prompt that teaches you to accept any certificate is worse than no HTTPS.
 
-## Two-factor authentication
+## Two-factor authentication and passkeys
 
-If the account has TOTP enabled, the first sign in asks for the six digit code. Later automatic sign ins do not: the server only demands a second factor for interactive logins, and the app replays the same credentials it was given.
+If the account has TOTP enabled, the first sign in asks for the six digit code.
+
+Later automatic sign ins **cannot** supply one, and the server demands a code on
+every login unless the request comes from a network in `TRUSTED_NETWORKS` (with
+`SKIP_2FA_ON_TRUSTED`, or for an admin). So either:
+
+- add the phone's network to `TRUSTED_NETWORKS` on the server, or
+- create an API token in the web app and paste it into **Settings → API token**.
+
+The token is the portable answer, since it works from any network.
+
+Passkeys need `WEBAUTHN_RP_ID` and `WEBAUTHN_ORIGIN` set, HTTPS, and a real
+hostname; WebAuthn rejects IP addresses. They sign the WebView in but cannot
+renew it in the background, so they need a token too.
 
 ## Troubleshooting
 

@@ -137,6 +137,11 @@ fun SignInScreen(
         )
 
         if (needsTotp) {
+            Text(
+                text = stringResource(R.string.signin_totp_background_note),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             OutlinedTextField(
                 value = totp,
                 onValueChange = { totp = it.filter(Char::isDigit).take(6) },

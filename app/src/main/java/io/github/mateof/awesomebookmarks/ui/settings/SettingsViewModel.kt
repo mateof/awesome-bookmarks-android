@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.mateof.awesomebookmarks.data.AppSettings
 import io.github.mateof.awesomebookmarks.data.SettingsRepository
 import io.github.mateof.awesomebookmarks.network.SessionManager
+import io.github.mateof.awesomebookmarks.network.TokenResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,29 @@ class SettingsViewModel @Inject constructor(
 
     private val _signedOut = MutableStateFlow(false)
     val signedOut: StateFlow<Boolean> = _signedOut.asStateFlow()
+
+    private val _tokenFeedback = MutableStateFlow<TokenResult?>(null)
+    val tokenFeedback: StateFlow<TokenResult?> = _tokenFeedback.asStateFlow()
+
+    init {
+        // Best effort, and cheap: an older server just answers 404.
+        viewModelScope.launch { sessionManager.refreshServerVersion() }
+    }
+
+    fun saveApiToken(token: String) {
+        viewModelScope.launch { _tokenFeedback.value = sessionManager.saveApiToken(token) }
+    }
+
+    fun clearApiToken() {
+        viewModelScope.launch {
+            sessionManager.clearApiToken()
+            _tokenFeedback.value = null
+        }
+    }
+
+    fun dismissTokenFeedback() {
+        _tokenFeedback.value = null
+    }
 
     fun setServer(primary: String, fallback: String) = edit { settingsRepository.setServer(primary, fallback) }
     fun setAppLock(enabled: Boolean) = edit { settingsRepository.setAppLockEnabled(enabled) }

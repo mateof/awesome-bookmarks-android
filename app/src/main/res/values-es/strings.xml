@@ -148,4 +148,19 @@
     <string name="settings_webview_unknown">desconocida</string>
     <string name="settings_webview_outdated_hint">Este WebView es anterior a Chromium 108 y puede renderizar mal la interfaz.</string>
     <string name="settings_disclaimer">App complementaria del servidor AwesomeBookmarks.</string>
+    <!-- Token de API -->
+    <string name="settings_section_token">Token de API (opcional)</string>
+    <string name="settings_token_field">Pega un token</string>
+    <string name="settings_token_explainer">Créalo en la web, en Ajustes → API. Lleva su propia copia de tu clave de cifrado, así que guardar en segundo plano sigue funcionando sin tu contraseña y sin segundo factor.</string>
+    <string name="settings_token_when">Lo necesitas si tu cuenta usa doble factor o passkey. Sin él la app no puede renovar la sesión sola y compartir un enlace dejará de funcionar al cabo de media hora.</string>
+    <string name="settings_token_present">Hay un token guardado y todos los guardados lo usan.</string>
+    <string name="settings_token_save">Guardar token</string>
+    <string name="settings_token_clear">Quitar token</string>
+    <string name="settings_token_saved">Token verificado y guardado</string>
+    <string name="settings_token_invalid">El servidor ha rechazado ese token</string>
+    <string name="settings_token_unreachable">No se puede contactar con el servidor para comprobar el token</string>
+    <string name="signin_totp_background_note">Aviso: con doble factor la app no puede volver a entrar sola, así que guardar enlaces en segundo plano dejará de funcionar al rato. Añade un token de API en Ajustes para evitarlo.</string>
+    <string name="save_error_token_rejected">El token de API ha sido rechazado. Crea uno nuevo y actualízalo en Ajustes.</string>
+    <string name="settings_server_version">Versión del servidor %1$s</string>
+    <string name="settings_server_version_unknown">Versión del servidor desconocida (necesita servidor 0.20.2 o superior)</string>
 </resources>

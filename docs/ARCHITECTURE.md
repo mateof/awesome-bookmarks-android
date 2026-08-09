@@ -67,6 +67,7 @@ The cost of this design is that signing out inside the web interface does not st
 | `GET /api/v1/folders` | Folder picker, flattened into a tree client side |
 | `GET /api/v1/tags` | Tag autocomplete |
 | `POST /api/ext/quick-add` | Saving a link, with tag names rather than ids |
+| `GET /api/v1/version` | Server version for Settings. 404 on servers older than 0.20.2 |
 
 Plus `api.github.com` for update checks, on a separate HTTP client with no cookie jar.
 

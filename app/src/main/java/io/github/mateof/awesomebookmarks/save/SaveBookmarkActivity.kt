@@ -189,6 +189,7 @@ private fun SaveSheet(
                 SaveError.NOT_CONFIGURED -> stringResource(R.string.save_error_not_configured)
                 SaveError.UNREACHABLE -> stringResource(R.string.save_error_unreachable)
                 SaveError.SIGN_IN_REQUIRED -> stringResource(R.string.save_error_sign_in)
+                SaveError.TOKEN_REJECTED -> stringResource(R.string.save_error_token_rejected)
                 SaveError.FAILED -> state.errorDetail.ifBlank { stringResource(R.string.save_error_generic) }
             }
             Text(text = message, color = MaterialTheme.colorScheme.error)

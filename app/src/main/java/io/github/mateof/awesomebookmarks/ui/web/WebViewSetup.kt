@@ -50,6 +50,22 @@ fun WebView.applyBookmarksConfiguration(appSettings: AppSettings) {
         WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, false)
     }
 
+    // Passkeys. A WebView refuses WebAuthn unless it is asked for explicitly,
+    // which is why passwordless sign in silently does nothing in most wrapper
+    // apps. FOR_APP scopes credentials to this app rather than sharing the
+    // browser's, which is what we want for a single site client.
+    //
+    // The server side has its own requirements: WEBAUTHN_RP_ID and
+    // WEBAUTHN_ORIGIN configured, HTTPS, and a real hostname, because WebAuthn
+    // forbids IP addresses as relying party ids. Over http on a LAN address
+    // there is nothing to enable.
+    if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_AUTHENTICATION)) {
+        WebSettingsCompat.setWebAuthenticationSupport(
+            settings,
+            WebSettingsCompat.WEB_AUTHENTICATION_SUPPORT_FOR_APP,
+        )
+    }
+
     isVerticalScrollBarEnabled = false
     isHorizontalScrollBarEnabled = false
     overScrollMode = View.OVER_SCROLL_NEVER

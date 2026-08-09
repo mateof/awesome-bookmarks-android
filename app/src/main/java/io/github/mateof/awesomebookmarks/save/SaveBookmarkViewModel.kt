@@ -120,6 +120,7 @@ class SaveBookmarkViewModel @Inject constructor(
     private fun Throwable.toSaveError(): SaveError = when {
         this is SessionException && problem == SessionProblem.NOT_CONFIGURED -> SaveError.NOT_CONFIGURED
         this is SessionException && problem == SessionProblem.UNREACHABLE -> SaveError.UNREACHABLE
+        this is SessionException && problem == SessionProblem.TOKEN_REJECTED -> SaveError.TOKEN_REJECTED
         this is SessionException -> SaveError.SIGN_IN_REQUIRED
         else -> SaveError.FAILED
     }
@@ -157,4 +158,4 @@ data class SaveUiState(
     }
 }
 
-enum class SaveError { NOT_CONFIGURED, UNREACHABLE, SIGN_IN_REQUIRED, FAILED }
+enum class SaveError { NOT_CONFIGURED, UNREACHABLE, SIGN_IN_REQUIRED, TOKEN_REJECTED, FAILED }

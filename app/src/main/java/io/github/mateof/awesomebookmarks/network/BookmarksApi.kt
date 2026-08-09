@@ -97,10 +97,22 @@ class BookmarksApi @Inject constructor(
      * valid but the server dropped the decryption key after an idle timeout,
      * which is fixed by logging in again, not by asking the user for anything.
      */
-    suspend fun me(baseUrl: String): ApiResponse = get(baseUrl, "/api/v1/me")
+    suspend fun me(baseUrl: String, token: String? = null): ApiResponse =
+        get(baseUrl, "/api/v1/me", token)
 
-    suspend fun folders(baseUrl: String): List<Folder> {
-        val response = get(baseUrl, "/api/v1/folders")
+    /**
+     * The product version the server is running. Added in server 0.20.2; older
+     * servers answer 404, which the caller reads as "unknown" rather than an
+     * error.
+     */
+    suspend fun serverVersion(baseUrl: String, token: String? = null): String? {
+        val response = get(baseUrl, "/api/v1/version", token)
+        if (!response.isSuccess) return null
+        return (response.body as? JsonObject)?.string("version")
+    }
+
+    suspend fun folders(baseUrl: String, token: String? = null): List<Folder> {
+        val response = get(baseUrl, "/api/v1/folders", token)
         if (!response.isSuccess) throw ApiException(response.errorMessage())
         return (response.body as? JsonArray).orEmpty().map { element ->
             val obj = element.jsonObject
@@ -112,8 +124,8 @@ class BookmarksApi @Inject constructor(
         }.filter { it.id.isNotEmpty() }
     }
 
-    suspend fun tags(baseUrl: String): List<Tag> {
-        val response = get(baseUrl, "/api/v1/tags")
+    suspend fun tags(baseUrl: String, token: String? = null): List<Tag> {
+        val response = get(baseUrl, "/api/v1/tags", token)
         if (!response.isSuccess) throw ApiException(response.errorMessage())
         return (response.body as? JsonArray).orEmpty().map { element ->
             val obj = element.jsonObject
@@ -139,6 +151,7 @@ class BookmarksApi @Inject constructor(
         title: String?,
         folderId: String?,
         tags: List<String>,
+        token: String? = null,
     ): ApiResponse {
         val body = buildJsonObject {
             put("url", url)
@@ -146,19 +159,32 @@ class BookmarksApi @Inject constructor(
             put("folderId", folderId?.let { JsonPrimitiveOf(it) } ?: JsonNull)
             put("tags", buildJsonArray { tags.forEach { add(JsonPrimitiveOf(it)) } })
         }
-        return post(baseUrl, "/api/ext/quick-add", body.toString())
+        return post(baseUrl, "/api/ext/quick-add", body.toString(), token)
     }
 
-    private suspend fun get(baseUrl: String, path: String): ApiResponse =
-        execute(Request.Builder().url(baseUrl + path).get().build())
+    private suspend fun get(baseUrl: String, path: String, token: String? = null): ApiResponse =
+        execute(Request.Builder().url(baseUrl + path).get().bearer(token).build())
 
-    private suspend fun post(baseUrl: String, path: String, jsonBody: String): ApiResponse =
-        execute(
-            Request.Builder()
-                .url(baseUrl + path)
-                .post(jsonBody.toRequestBody(JSON_MEDIA_TYPE))
-                .build(),
-        )
+    private suspend fun post(
+        baseUrl: String,
+        path: String,
+        jsonBody: String,
+        token: String? = null,
+    ): ApiResponse = execute(
+        Request.Builder()
+            .url(baseUrl + path)
+            .post(jsonBody.toRequestBody(JSON_MEDIA_TYPE))
+            .bearer(token)
+            .build(),
+    )
+
+    /**
+     * A Bearer token authenticates on its own, without the session cookie the
+     * jar would otherwise attach. Both can travel together; the server prefers
+     * the header.
+     */
+    private fun Request.Builder.bearer(token: String?): Request.Builder =
+        if (token.isNullOrBlank()) this else header("Authorization", "Bearer $token")
 
     private suspend fun execute(
         request: Request,
