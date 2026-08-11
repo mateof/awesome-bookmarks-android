@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.1]
+
+### Fixed
+- The Unlock button on the lock screen did nothing, leaving anyone whose
+  fingerprint prompt was dismissed, or who has no fingerprint set up, unable to
+  get into the app at all. The lock overlay swallows touches so they cannot
+  reach the page behind it, but it was consuming them in the Initial pointer
+  pass, which runs parent to child and therefore ate its own button's taps
+  before the button saw them. It now consumes in the Main pass, which runs
+  child to parent, so the overlay's controls work and everything else is still
+  blocked.
+- A device that cannot authenticate at all, with no biometrics enrolled and no
+  device credential, now opens instead of showing a lock it could never satisfy.
+
 ## [0.4.0]
 
 ### Changed
@@ -119,7 +133,8 @@ First release.
 - In app updates from GitHub releases, with a daily background check.
 - English and Spanish translations.
 
-[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.4.1
 [0.4.0]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.4.0
 [0.3.0]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.3.0
 [0.2.1]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.2.1
