@@ -74,7 +74,7 @@ so pair it with an API token exactly as with two-factor authentication.
 
 ## Biometric app lock
 
-**On by default**, because a stored password to your whole library deserves one. Biometrics or the device PIN, whichever the device offers, re-armed after 60 seconds in the background so picking a file does not prompt twice.
+**On by default**, because a stored password to your whole library deserves one. Biometrics or the device PIN, whichever the device offers, re-armed after a wait you choose in **Settings → Security**: every time you leave, 1, 5, 15, 30 or 60 minutes, or only when the app starts. The default is 30 minutes, because a shorter one turns every trip to the browser into another fingerprint.
 
 ## Dual address with automatic fallback
 

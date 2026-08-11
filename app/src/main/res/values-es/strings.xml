@@ -176,4 +176,14 @@
     <string name="save_folder_no_matches">Ninguna carpeta coincide</string>
     <string name="save_folder_expand">Desplegar</string>
     <string name="save_folder_collapse">Plegar</string>
+    <!-- Periodo de gracia del bloqueo -->
+    <string name="settings_lock_grace">Volver a preguntar tras</string>
+    <string name="settings_lock_grace_summary">Cuánto puede estar la app en segundo plano antes de volver a pedirte la huella. Abrir un enlace o elegir un archivo cuenta como salir.</string>
+    <string name="lock_grace_immediately">Cada vez que salga</string>
+    <string name="lock_grace_1">1 minuto</string>
+    <string name="lock_grace_5">5 minutos</string>
+    <string name="lock_grace_15">15 minutos</string>
+    <string name="lock_grace_30">30 minutos</string>
+    <string name="lock_grace_60">1 hora</string>
+    <string name="lock_grace_only_on_start">Solo al arrancar la app</string>
 </resources>

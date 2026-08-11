@@ -88,6 +88,7 @@ class SettingsActivity : ComponentActivity() {
                                 onServerChanged = viewModel::setServer,
                                 onSignOut = viewModel::signOut,
                                 onAppLockChanged = viewModel::setAppLock,
+                                onAppLockGraceChanged = viewModel::setAppLockGrace,
                                 onRememberFolderChanged = viewModel::setRememberFolder,
                                 onAlwaysTagsChanged = viewModel::setAlwaysTags,
                                 onOneTapChanged = viewModel::setOneTapSave,

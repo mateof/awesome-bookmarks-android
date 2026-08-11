@@ -5,6 +5,7 @@ package io.github.mateof.awesomebookmarks.ui.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -104,6 +107,9 @@ fun SettingsScreen(
                     enabled = biometricsAvailable,
                     onCheckedChange = callbacks.onAppLockChanged,
                 )
+                if (settings.appLockEnabled && biometricsAvailable) {
+                    LockGraceRow(settings.appLockGraceMinutes, callbacks.onAppLockGraceChanged)
+                }
                 HorizontalDivider()
             }
 
@@ -349,6 +355,52 @@ private fun AlwaysTagsField(settings: AppSettings, callbacks: SettingsCallbacks)
     }
 }
 
+/** How long the app may sit in the background before asking again. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LockGraceRow(minutes: Int, onChange: (Int) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            text = stringResource(R.string.settings_lock_grace),
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Box {
+            TextButton(onClick = { expanded = true }) { Text(lockGraceLabel(minutes)) }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                AppSettings.GRACE_CHOICES.forEach { choice ->
+                    DropdownMenuItem(
+                        text = { Text(lockGraceLabel(choice)) },
+                        onClick = {
+                            expanded = false
+                            onChange(choice)
+                        },
+                    )
+                }
+            }
+        }
+        Text(
+            text = stringResource(R.string.settings_lock_grace_summary),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun lockGraceLabel(minutes: Int): String = stringResource(
+    when (minutes) {
+        0 -> R.string.lock_grace_immediately
+        1 -> R.string.lock_grace_1
+        5 -> R.string.lock_grace_5
+        15 -> R.string.lock_grace_15
+        30 -> R.string.lock_grace_30
+        60 -> R.string.lock_grace_60
+        else -> R.string.lock_grace_only_on_start
+    },
+)
+
 @Composable
 private fun TextZoomRow(zoom: Int, onChange: (Int) -> Unit) {
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -419,6 +471,7 @@ data class SettingsCallbacks(
     val onServerChanged: (String, String) -> Unit,
     val onSignOut: () -> Unit,
     val onAppLockChanged: (Boolean) -> Unit,
+    val onAppLockGraceChanged: (Int) -> Unit,
     val onRememberFolderChanged: (Boolean) -> Unit,
     val onAlwaysTagsChanged: (String) -> Unit,
     val onOneTapChanged: (Boolean) -> Unit,

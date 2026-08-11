@@ -54,6 +54,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setServer(primary: String, fallback: String) = edit { settingsRepository.setServer(primary, fallback) }
+    fun setAppLockGrace(minutes: Int) = edit { settingsRepository.setAppLockGraceMinutes(minutes) }
     fun setAppLock(enabled: Boolean) = edit { settingsRepository.setAppLockEnabled(enabled) }
     fun setRememberFolder(enabled: Boolean) = edit { settingsRepository.setRememberLastFolder(enabled) }
     fun setAlwaysTags(tags: String) = edit { settingsRepository.setAlwaysTags(tags) }

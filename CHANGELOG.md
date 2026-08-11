@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0]
+
+### Changed
+- The app lock now waits **30 minutes** by default before asking again, instead
+  of 60 seconds, and the wait is a setting: every time you leave, 1, 5, 15, 30
+  or 60 minutes, or only when the app starts. A minute was short enough that
+  reading one linked page and coming back meant another fingerprint, which is
+  friction without much security to show for it.
+
 ### Changed
 - Relicensed from MIT to **GPL-3.0-or-later**. The full licence text is in
   LICENSE and every source file carries an SPDX notice. All dependencies are
@@ -110,7 +119,8 @@ First release.
 - In app updates from GitHub releases, with a daily background check.
 - English and Spanish translations.
 
-[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/mateof/awesome-bookmarks-android/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.4.0
 [0.3.0]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.3.0
 [0.2.1]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.2.1
 [0.2.0]: https://github.com/mateof/awesome-bookmarks-android/releases/tag/v0.2.0
