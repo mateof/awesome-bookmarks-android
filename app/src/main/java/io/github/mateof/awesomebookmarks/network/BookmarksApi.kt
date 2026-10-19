@@ -168,6 +168,16 @@ class BookmarksApi @Inject constructor(
         return post(baseUrl, "/api/ext/quick-add", body.toString(), token)
     }
 
+    suspend fun autofillRuntime(baseUrl: String, token: String? = null): ApiResponse =
+        get(baseUrl, "/api/ext/autofill", token)
+
+    suspend fun autofillRunner(baseUrl: String): String? = withContext(Dispatchers.IO) {
+        val request = Request.Builder().url("$baseUrl/api/ext/autofill/runner.js").get().build()
+        client.newCall(request).execute().use { response ->
+            if (response.isSuccessful) response.body?.string() else null
+        }
+    }
+
     private suspend fun get(baseUrl: String, path: String, token: String? = null): ApiResponse =
         execute(Request.Builder().url(baseUrl + path).get().bearer(token).build())
 

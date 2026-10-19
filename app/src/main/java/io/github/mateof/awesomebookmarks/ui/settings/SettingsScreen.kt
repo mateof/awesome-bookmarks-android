@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import io.github.mateof.awesomebookmarks.R
 import io.github.mateof.awesomebookmarks.data.AppSettings
 import io.github.mateof.awesomebookmarks.network.TokenResult
+import io.github.mateof.awesomebookmarks.autofill.AutofillState
 import io.github.mateof.awesomebookmarks.update.UpdateSection
 import io.github.mateof.awesomebookmarks.update.UpdateUiState
 import io.github.mateof.awesomebookmarks.util.WebViewInfo
@@ -57,6 +58,7 @@ fun SettingsScreen(
     biometricsAvailable: Boolean,
     updateState: UpdateUiState,
     tokenFeedback: TokenResult?,
+    autofillState: AutofillState?,
     callbacks: SettingsCallbacks,
 ) {
     var showSignOutDialog by remember { mutableStateOf(false) }
@@ -93,6 +95,26 @@ fun SettingsScreen(
             item { SectionHeader(stringResource(R.string.settings_section_token)) }
             item { ApiTokenSection(settings, tokenFeedback, callbacks) }
             item { HorizontalDivider() }
+
+            item { SectionHeader(stringResource(R.string.settings_section_autofill)) }
+            item {
+                Caption(
+                    when (autofillState) {
+                        null -> stringResource(R.string.autofill_status_checking)
+                        is AutofillState.Ready -> stringResource(
+                            R.string.autofill_status_ready,
+                            autofillState.runtime.automations.size,
+                        )
+                        AutofillState.NotAllowed -> stringResource(R.string.autofill_status_not_allowed)
+                        AutofillState.Unsupported -> stringResource(R.string.autofill_status_unsupported)
+                        is AutofillState.Failed -> stringResource(
+                            R.string.autofill_status_failed,
+                            autofillState.message,
+                        )
+                    },
+                )
+                HorizontalDivider()
+            }
 
             item { SectionHeader(stringResource(R.string.settings_section_security)) }
             item {

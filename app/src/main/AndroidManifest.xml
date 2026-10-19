@@ -87,6 +87,13 @@
             android:label="@string/settings_title"
             android:parentActivityName=".MainActivity" />
 
+        <activity
+            android:name=".autofill.AutofillActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|smallestScreenSize|density"
+            android:exported="false"
+            android:label="@string/autofill_title"
+            android:windowSoftInputMode="adjustResize" />
+
         <receiver
             android:name=".widget.SaveLinkWidget"
             android:exported="false">

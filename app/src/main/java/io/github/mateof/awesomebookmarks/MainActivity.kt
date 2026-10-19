@@ -57,7 +57,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
+import io.github.mateof.awesomebookmarks.autofill.AutofillActivity
+import io.github.mateof.awesomebookmarks.autofill.AutofillRepository
+import io.github.mateof.awesomebookmarks.autofill.automationFor
 import io.github.mateof.awesomebookmarks.data.AppSettings
 import io.github.mateof.awesomebookmarks.save.SaveBookmarkActivity
 import io.github.mateof.awesomebookmarks.ui.MainEvent
@@ -79,7 +83,10 @@ import io.github.mateof.awesomebookmarks.update.UpdateDialog
 import io.github.mateof.awesomebookmarks.update.UpdateViewModel
 import io.github.mateof.awesomebookmarks.util.WebViewInfo
 import io.github.mateof.awesomebookmarks.util.isSameOrigin
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
@@ -94,6 +101,9 @@ class MainActivity : FragmentActivity() {
     private var lastBackPressAt = 0L
 
     private val downloader by lazy { Downloader(applicationContext) }
+
+    @Inject
+    lateinit var autofill: AutofillRepository
 
     private val fileChooserLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -341,21 +351,52 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch { autofill.refresh() }
+    }
+
     private fun handleExternalUrl(uri: Uri): Boolean {
         val settings = viewModel.settings.value ?: AppSettings()
         val isWeb = uri.scheme == "http" || uri.scheme == "https"
+        if (isWeb) {
+            val cached = autofill.cachedRuntime()
+            if (cached == null) {
+                lifecycleScope.launch {
+                    withTimeoutOrNull(AUTOFILL_LOOKUP_MS) { autofill.refresh() }
+                    val automation = autofill.cachedRuntime()?.let { automationFor(it, uri.toString()) }
+                    when {
+                        automation != null -> openAutomated(uri, automation.bookmarkId)
+                        settings.openExternalLinksInBrowser -> launchExternal(uri, isWeb = true)
+                        else -> webView?.loadUrl(uri.toString())
+                    }
+                }
+                return true
+            }
+            automationFor(cached, uri.toString())?.let {
+                openAutomated(uri, it.bookmarkId)
+                return true
+            }
+        }
         if (isWeb && !settings.openExternalLinksInBrowser) return false
 
-        return runCatching {
+        launchExternal(uri, isWeb)
+        return true
+    }
+
+    private fun openAutomated(uri: Uri, bookmarkId: String) {
+        startActivity(AutofillActivity.intent(this, uri.toString(), bookmarkId))
+    }
+
+    private fun launchExternal(uri: Uri, isWeb: Boolean) {
+        runCatching {
             if (isWeb) {
                 CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(this, uri)
             } else {
                 startActivity(Intent(Intent.ACTION_VIEW, uri))
             }
-            true
-        }.getOrElse {
+        }.onFailure {
             toast(getString(R.string.toast_no_app_for_link))
-            true
         }
     }
 
@@ -586,6 +627,7 @@ class MainActivity : FragmentActivity() {
 
     private companion object {
         const val EXIT_CONFIRM_WINDOW_MS = 2_000L
+        const val AUTOFILL_LOOKUP_MS = 3_000L
     }
 }
 

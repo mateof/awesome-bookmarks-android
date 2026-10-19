@@ -186,4 +186,16 @@
     <string name="lock_grace_30">30 minutes</string>
     <string name="lock_grace_60">1 hour</string>
     <string name="lock_grace_only_on_start">Only when the app starts</string>
+
+    <string name="action_close">Close</string>
+    <string name="autofill_title">Autofill</string>
+    <string name="autofill_open_in_browser">Open in browser</string>
+    <string name="autofill_done">Autofill: %1$d of %2$d steps</string>
+    <string name="autofill_failed">Autofill stopped: %1$s</string>
+    <string name="settings_section_autofill">Autofill</string>
+    <string name="autofill_status_checking">Checking…</string>
+    <string name="autofill_status_ready">%1$d active automations. Links that have one open in a screen of this app so the form can be filled; everything else still opens in your browser.</string>
+    <string name="autofill_status_not_allowed">The API token cannot read autofill data. Create one in the web app with \"Can read autofill data\" ticked, or remove the token to use your password session.</string>
+    <string name="autofill_status_unsupported">This server has no autofill yet. Update it to use this feature.</string>
+    <string name="autofill_status_failed">Could not check autofill: %1$s</string>
 </resources>

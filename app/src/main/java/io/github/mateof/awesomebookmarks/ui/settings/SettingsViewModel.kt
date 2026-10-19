@@ -6,6 +6,8 @@ package io.github.mateof.awesomebookmarks.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.mateof.awesomebookmarks.autofill.AutofillRepository
+import io.github.mateof.awesomebookmarks.autofill.AutofillState
 import io.github.mateof.awesomebookmarks.data.AppSettings
 import io.github.mateof.awesomebookmarks.data.SettingsRepository
 import io.github.mateof.awesomebookmarks.network.SessionManager
@@ -22,6 +24,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val sessionManager: SessionManager,
+    private val autofill: AutofillRepository,
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings?> = settingsRepository.settings
@@ -30,22 +33,37 @@ class SettingsViewModel @Inject constructor(
     private val _signedOut = MutableStateFlow(false)
     val signedOut: StateFlow<Boolean> = _signedOut.asStateFlow()
 
+    private val _autofillState = MutableStateFlow<AutofillState?>(null)
+    val autofillState: StateFlow<AutofillState?> = _autofillState.asStateFlow()
+
     private val _tokenFeedback = MutableStateFlow<TokenResult?>(null)
     val tokenFeedback: StateFlow<TokenResult?> = _tokenFeedback.asStateFlow()
 
     init {
         // Best effort, and cheap: an older server just answers 404.
         viewModelScope.launch { sessionManager.refreshServerVersion() }
+        refreshAutofill()
+    }
+
+    private fun refreshAutofill() {
+        viewModelScope.launch {
+            _autofillState.value = null
+            _autofillState.value = autofill.refresh(maxAgeMs = 0)
+        }
     }
 
     fun saveApiToken(token: String) {
-        viewModelScope.launch { _tokenFeedback.value = sessionManager.saveApiToken(token) }
+        viewModelScope.launch {
+            _tokenFeedback.value = sessionManager.saveApiToken(token)
+            refreshAutofill()
+        }
     }
 
     fun clearApiToken() {
         viewModelScope.launch {
             sessionManager.clearApiToken()
             _tokenFeedback.value = null
+            refreshAutofill()
         }
     }
 

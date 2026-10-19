@@ -186,4 +186,16 @@
     <string name="lock_grace_30">30 minutos</string>
     <string name="lock_grace_60">1 hora</string>
     <string name="lock_grace_only_on_start">Solo al arrancar la app</string>
+
+    <string name="action_close">Cerrar</string>
+    <string name="autofill_title">Autorrelleno</string>
+    <string name="autofill_open_in_browser">Abrir en el navegador</string>
+    <string name="autofill_done">Autorrelleno: %1$d de %2$d pasos</string>
+    <string name="autofill_failed">El autorrelleno se paró: %1$s</string>
+    <string name="settings_section_autofill">Autorrelleno</string>
+    <string name="autofill_status_checking">Comprobando…</string>
+    <string name="autofill_status_ready">%1$d automatizaciones activas. Los enlaces que tienen una se abren en una pantalla de esta app para poder rellenar el formulario; el resto sigue abriéndose en tu navegador.</string>
+    <string name="autofill_status_not_allowed">El token de API no puede leer los datos de autorrelleno. Crea uno en la web con «Puede leer los datos de autorrelleno» marcado, o quita el token para usar tu sesión con contraseña.</string>
+    <string name="autofill_status_unsupported">Este servidor aún no tiene autorrelleno. Actualízalo para usarlo.</string>
+    <string name="autofill_status_failed">No se pudo comprobar el autorrelleno: %1$s</string>
 </resources>

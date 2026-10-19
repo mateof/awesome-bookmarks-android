@@ -56,6 +56,7 @@ class SettingsActivity : ComponentActivity() {
                 val signedOut by viewModel.signedOut.collectAsStateWithLifecycle()
                 val updateState by updateViewModel.state.collectAsStateWithLifecycle()
                 val tokenFeedback by viewModel.tokenFeedback.collectAsStateWithLifecycle()
+                val autofillState by viewModel.autofillState.collectAsStateWithLifecycle()
 
                 LaunchedEffect(signedOut) { if (signedOut) finish() }
 
@@ -83,6 +84,7 @@ class SettingsActivity : ComponentActivity() {
                             biometricsAvailable = remember { AppLock.isAvailable(this@SettingsActivity) },
                             updateState = updateState,
                             tokenFeedback = tokenFeedback,
+                            autofillState = autofillState,
                             callbacks = SettingsCallbacks(
                                 onBack = { finish() },
                                 onServerChanged = viewModel::setServer,

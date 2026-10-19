@@ -6,6 +6,22 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.0]
+
+### Added
+- **Form autofill.** A link whose bookmark has an approved automation on the
+  server (server 1.15.0 or later) now opens in a screen of the app instead of
+  the browser, and its form is filled with your autofill data when the page
+  loads: the same steps the browser extension runs, served by your own server
+  so both stay in step. Custom Tabs cannot run anything on a page, which is why
+  these links open in-app; every other link still opens in your browser. The
+  top bar can hand the page over to the browser at any point.
+- Before filling, the app checks that the page is still on the bookmark's
+  site. A redirect to another domain gets nothing.
+- Settings has an **Autofill** section that says whether it is ready and, if
+  not, why: typically an API token created without "Can read autofill data".
+  With no token, your password session is enough.
+
 ## [0.4.1]
 
 ### Fixed

@@ -91,6 +91,7 @@ JDK 17 and the Android SDK (compileSdk 35). Put `sdk.dir` in `local.properties` 
 
 - **No offline access.** Your bookmarks live on your server. Out of reach of the server, out of reach of your bookmarks. Saving while offline is not queued yet.
 - The library UI is the server's web app, so anything that looks or behaves oddly there will look the same here.
+- The autofill screen is a plain WebView: file uploads and downloads on those pages do not work there. Use the "open in browser" button in its top bar for that step.
 
 ## License
 
