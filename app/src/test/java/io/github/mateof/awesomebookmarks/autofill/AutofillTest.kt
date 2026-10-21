@@ -109,4 +109,40 @@ class AutofillTest {
         val partial = parseAutofillRuntime(json.parseToJsonElement("""{"automations":[{"url":"https://x"}]}"""))!!
         assertTrue(partial.automations.isEmpty())
     }
+
+    @Test
+    fun `reads the fields the page returns through evaluateJavascript, which arrive JSON-encoded twice`() {
+        val raw = json.encodeToString(
+            kotlinx.serialization.json.JsonPrimitive.serializer(),
+            kotlinx.serialization.json.JsonPrimitive("""[{"selector":"#nif","kind":"fill","value":"1"}]"""),
+        )
+        val fields = parseCapturedFields(raw) { json.parseToJsonElement(it) }!!
+        assertEquals(1, fields.size)
+        assertNull(parseCapturedFields("null") { json.parseToJsonElement(it) })
+        assertNull(parseCapturedFields("") { json.parseToJsonElement(it) })
+    }
+
+    @Test
+    fun `a capture that found nothing new is told apart from one that saved steps`() {
+        val nothing = parseCaptureResult(
+            json.parseToJsonElement(
+                """{"bookmarkId":"b1","createdBookmark":false,"hadAutomation":true,"added":0,"kept":2,"steps":[]}""",
+            ),
+        )
+        assertEquals(CaptureOutcome.NothingNew, nothing)
+        val saved = parseCaptureResult(
+            json.parseToJsonElement(
+                """{"bookmarkId":"b1","createdBookmark":false,"hadAutomation":false,"added":3,"kept":0,"steps":[{},{},{}]}""",
+            ),
+        ) as CaptureOutcome.Saved
+        assertEquals(3, saved.total)
+        assertFalse(saved.hadAutomation)
+    }
+
+    @Test
+    fun `the capture call returns the fields as a string so evaluateJavascript can hand them back`() {
+        val js = captureInvocation("CAPTURE")
+        assertTrue(js.contains("CAPTURE"))
+        assertTrue(js.contains("return JSON.stringify(globalThis.__abCaptureFormFields())"))
+    }
 }

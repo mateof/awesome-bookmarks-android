@@ -198,4 +198,17 @@
     <string name="autofill_status_not_allowed">El token de API no puede leer los datos de autorrelleno. Crea uno en la web con «Puede leer los datos de autorrelleno» marcado, o quita el token para usar tu sesión con contraseña.</string>
     <string name="autofill_status_unsupported">Este servidor aún no tiene autorrelleno. Actualízalo para usarlo.</string>
     <string name="autofill_status_failed">No se pudo comprobar el autorrelleno: %1$s</string>
+
+    <string name="autofill_capture">Guardar formulario</string>
+    <string name="autofill_capture_empty">No hay campos rellenos en esta página</string>
+    <string name="autofill_capture_nothing">Nada nuevo: esos campos ya estaban en la automatización</string>
+    <string name="autofill_capture_failed">No se pudo guardar el formulario: %1$s</string>
+    <plurals name="autofill_capture_saved">
+        <item quantity="one">%1$d paso guardado, pendiente de aprobar en la ficha</item>
+        <item quantity="other">%1$d pasos guardados, pendientes de aprobar en la ficha</item>
+    </plurals>
+    <plurals name="autofill_capture_added">
+        <item quantity="one">%1$d paso añadido a la automatización, pendiente de aprobar</item>
+        <item quantity="other">%1$d pasos añadidos a la automatización, pendiente de aprobar</item>
+    </plurals>
 </resources>

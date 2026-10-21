@@ -122,6 +122,11 @@ class MainActivity : FragmentActivity() {
             callback.onReceiveValue(uris)
         }
 
+    private val captureLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) webView?.reload()
+        }
+
     private val recordAudioLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             val request = pendingMediaPermission ?: return@registerForActivityResult
@@ -316,7 +321,7 @@ class MainActivity : FragmentActivity() {
                         startActivity(Intent(this@MainActivity, SaveBookmarkActivity::class.java))
                     },
                     onReload = { webView?.reload() },
-                    onSearch = { viewModel.navigateTo("/search") },
+                    onSearch = { webView?.evaluateJavascript(OPEN_SEARCH_JS, null) },
                 )
             }
         }
@@ -357,6 +362,15 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun handleExternalUrl(uri: Uri): Boolean {
+        if (uri.scheme == APP_SCHEME && uri.host == "capture") {
+            val target = uri.getQueryParameter("url")
+            if (!target.isNullOrBlank()) {
+                captureLauncher.launch(
+                    AutofillActivity.intent(this, target, uri.getQueryParameter("bookmark")),
+                )
+            }
+            return true
+        }
         val settings = viewModel.settings.value ?: AppSettings()
         val isWeb = uri.scheme == "http" || uri.scheme == "https"
         if (isWeb) {
@@ -628,6 +642,9 @@ class MainActivity : FragmentActivity() {
     private companion object {
         const val EXIT_CONFIRM_WINDOW_MS = 2_000L
         const val AUTOFILL_LOOKUP_MS = 3_000L
+        const val APP_SCHEME = "abapp"
+        const val OPEN_SEARCH_JS =
+            "window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));"
     }
 }
 

@@ -26,7 +26,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -46,12 +48,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.mateof.awesomebookmarks.R
 import io.github.mateof.awesomebookmarks.ui.theme.AwesomeBookmarksTheme
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -69,13 +73,18 @@ class AutofillActivity : ComponentActivity() {
     private var webView: WebView? = null
     private var plan: Plan? = null
     private var ran = false
-    private val reports = MutableStateFlow<String?>(null)
+    private val reports = MutableSharedFlow<String>(extraBufferCapacity = 8)
 
     private data class Plan(
         val automation: RunnableAutomation?,
         val variables: Map<String, String>,
         val runner: String?,
+        val captureScript: String?,
     )
+
+    private val captureReady = MutableStateFlow(false)
+    private var capturing = false
+    private var bookmarkId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,7 +93,7 @@ class AutofillActivity : ComponentActivity() {
             finish()
             return
         }
-        val bookmarkId = intent.getStringExtra(EXTRA_BOOKMARK_ID)
+        bookmarkId = intent.getStringExtra(EXTRA_BOOKMARK_ID)
 
         setContent {
             AwesomeBookmarksTheme {
@@ -99,12 +108,13 @@ class AutofillActivity : ComponentActivity() {
                     val runtime = state.runtime
                     val automation = runtime.automations.firstOrNull { it.bookmarkId == bookmarkId }
                         ?: automationFor(runtime, url)
-                    Plan(automation, runtime.variables, state.runner)
+                    Plan(automation, runtime.variables, state.runner, state.captureScript)
                 }
 
-                else -> Plan(null, emptyMap(), null)
+                else -> Plan(null, emptyMap(), null, null)
             }
-            if (state !is AutofillState.Ready) reports.value = describe(state)
+            captureReady.value = plan?.captureScript != null
+            if (state !is AutofillState.Ready) reports.tryEmit(describe(state))
             webView?.let { start(it, url) }
         }
     }
@@ -123,9 +133,10 @@ class AutofillActivity : ComponentActivity() {
         var progress by remember { mutableStateOf(0) }
         var canGoBack by remember { mutableStateOf(false) }
         val snackbar = remember { SnackbarHostState() }
+        val canCapture by captureReady.collectAsStateWithLifecycle()
 
         LaunchedEffect(Unit) {
-            reports.collect { message -> if (message != null) snackbar.showSnackbar(message) }
+            reports.collect { message -> snackbar.showSnackbar(message) }
         }
 
         BackHandler(enabled = canGoBack) { webView?.goBack() }
@@ -163,6 +174,15 @@ class AutofillActivity : ComponentActivity() {
                 )
             },
             snackbarHost = { SnackbarHost(snackbar) },
+            floatingActionButton = {
+                if (canCapture) {
+                    ExtendedFloatingActionButton(
+                        onClick = { captureForm() },
+                        icon = { Icon(Icons.Filled.Save, contentDescription = null) },
+                        text = { Text(stringResource(R.string.autofill_capture)) },
+                    )
+                }
+            },
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 AndroidView(
@@ -210,10 +230,56 @@ class AutofillActivity : ComponentActivity() {
         if (report.ok && current?.automation != null && current.automation.script.isNotBlank()) {
             webView?.evaluateJavascript(scriptInvocation(current.automation.script, current.variables), null)
         }
-        reports.value = if (report.ok) {
-            getString(R.string.autofill_done, report.done, report.total)
-        } else {
-            getString(R.string.autofill_failed, report.error.orEmpty())
+        reports.tryEmit(
+            if (report.ok) {
+                getString(R.string.autofill_done, report.done, report.total)
+            } else {
+                getString(R.string.autofill_failed, report.error.orEmpty())
+            },
+        )
+    }
+
+    private fun captureForm() {
+        val view = webView ?: return
+        val script = plan?.captureScript ?: return
+        if (capturing) return
+        capturing = true
+        view.evaluateJavascript(captureInvocation(script)) { raw ->
+            val fields = parseCapturedFields(raw) { json.parseToJsonElement(it) }
+            if (fields == null || fields.isEmpty()) {
+                capturing = false
+                reports.tryEmit(getString(R.string.autofill_capture_empty))
+                return@evaluateJavascript
+            }
+            val pageUrl = view.url ?: intent.getStringExtra(EXTRA_URL).orEmpty()
+            lifecycleScope.launch {
+                val outcome = autofill.capture(bookmarkId, pageUrl, fields)
+                capturing = false
+                val message = when (outcome) {
+                    is CaptureOutcome.Saved -> {
+                        bookmarkId = outcome.bookmarkId
+                        setResult(RESULT_OK)
+                        if (outcome.hadAutomation) {
+                            resources.getQuantityString(
+                                R.plurals.autofill_capture_added,
+                                outcome.added,
+                                outcome.added,
+                            )
+                        } else {
+                            resources.getQuantityString(
+                                R.plurals.autofill_capture_saved,
+                                outcome.total,
+                                outcome.total,
+                            )
+                        }
+                    }
+
+                    CaptureOutcome.NothingNew -> getString(R.string.autofill_capture_nothing)
+                    CaptureOutcome.NotAllowed -> getString(R.string.autofill_status_not_allowed)
+                    is CaptureOutcome.Failed -> getString(R.string.autofill_capture_failed, outcome.message)
+                }
+                reports.tryEmit(message)
+            }
         }
     }
 

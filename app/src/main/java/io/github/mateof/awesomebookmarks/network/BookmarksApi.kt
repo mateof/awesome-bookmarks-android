@@ -171,8 +171,16 @@ class BookmarksApi @Inject constructor(
     suspend fun autofillRuntime(baseUrl: String, token: String? = null): ApiResponse =
         get(baseUrl, "/api/ext/autofill", token)
 
-    suspend fun autofillRunner(baseUrl: String): String? = withContext(Dispatchers.IO) {
-        val request = Request.Builder().url("$baseUrl/api/ext/autofill/runner.js").get().build()
+    suspend fun autofillRunner(baseUrl: String): String? = text(baseUrl, "/api/ext/autofill/runner.js")
+
+    suspend fun autofillCaptureScript(baseUrl: String): String? =
+        text(baseUrl, "/api/ext/autofill/capture.js")
+
+    suspend fun captureForm(baseUrl: String, body: String, token: String? = null): ApiResponse =
+        post(baseUrl, "/api/ext/autofill/capture", body, token)
+
+    private suspend fun text(baseUrl: String, path: String): String? = withContext(Dispatchers.IO) {
+        val request = Request.Builder().url(baseUrl + path).get().build()
         client.newCall(request).execute().use { response ->
             if (response.isSuccessful) response.body?.string() else null
         }

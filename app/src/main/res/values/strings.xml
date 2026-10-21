@@ -198,4 +198,17 @@
     <string name="autofill_status_not_allowed">The API token cannot read autofill data. Create one in the web app with \"Can read autofill data\" ticked, or remove the token to use your password session.</string>
     <string name="autofill_status_unsupported">This server has no autofill yet. Update it to use this feature.</string>
     <string name="autofill_status_failed">Could not check autofill: %1$s</string>
+
+    <string name="autofill_capture">Save form</string>
+    <string name="autofill_capture_empty">There are no filled fields on this page</string>
+    <string name="autofill_capture_nothing">Nothing new: those fields were already in the automation</string>
+    <string name="autofill_capture_failed">Could not save the form: %1$s</string>
+    <plurals name="autofill_capture_saved">
+        <item quantity="one">%1$d step saved, waiting for approval in the bookmark</item>
+        <item quantity="other">%1$d steps saved, waiting for approval in the bookmark</item>
+    </plurals>
+    <plurals name="autofill_capture_added">
+        <item quantity="one">%1$d step added to the automation, waiting for approval</item>
+        <item quantity="other">%1$d steps added to the automation, waiting for approval</item>
+    </plurals>
 </resources>

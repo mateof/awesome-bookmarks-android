@@ -32,6 +32,45 @@ data class AutofillRuntime(
 
 data class AutofillReport(val ok: Boolean, val done: Int, val total: Int, val error: String?)
 
+sealed interface CaptureOutcome {
+    data class Saved(
+        val bookmarkId: String,
+        val hadAutomation: Boolean,
+        val added: Int,
+        val kept: Int,
+        val total: Int,
+    ) : CaptureOutcome
+
+    data object NothingNew : CaptureOutcome
+    data object NotAllowed : CaptureOutcome
+    data class Failed(val message: String) : CaptureOutcome
+}
+
+fun captureInvocation(captureScript: String): String =
+    "(function () {\n$captureScript\nreturn JSON.stringify(globalThis.__abCaptureFormFields());\n})()"
+
+fun parseCapturedFields(raw: String?, parse: (String) -> JsonElement): JsonArray? {
+    if (raw.isNullOrBlank() || raw == "null") return null
+    val decoded = runCatching { (parse(raw) as? JsonPrimitive)?.takeIf { it.isString }?.content }
+        .getOrNull() ?: return null
+    return runCatching { parse(decoded) as? JsonArray }.getOrNull()
+}
+
+fun parseCaptureResult(body: JsonElement?): CaptureOutcome? {
+    val obj = body as? JsonObject ?: return null
+    val bookmarkId = obj.text("bookmarkId") ?: return null
+    val added = obj["added"]?.jsonPrimitive?.intOrNull ?: 0
+    val hadAutomation = obj["hadAutomation"]?.jsonPrimitive?.content == "true"
+    if (hadAutomation && added == 0) return CaptureOutcome.NothingNew
+    return CaptureOutcome.Saved(
+        bookmarkId = bookmarkId,
+        hadAutomation = hadAutomation,
+        added = added,
+        kept = obj["kept"]?.jsonPrimitive?.intOrNull ?: 0,
+        total = (obj["steps"] as? JsonArray)?.size ?: added,
+    )
+}
+
 fun parseAutofillRuntime(body: JsonElement?): AutofillRuntime? {
     val obj = body as? JsonObject ?: return null
     val variables = (obj["variables"] as? JsonObject).orEmpty().mapNotNull { (key, value) ->

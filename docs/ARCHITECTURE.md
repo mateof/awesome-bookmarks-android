@@ -69,6 +69,8 @@ The cost of this design is that signing out inside the web interface does not st
 | `POST /api/ext/quick-add` | Saving a link, with tag names rather than ids |
 | `GET /api/ext/autofill` | Approved automations and the autofill values. Needs the session, or a token created with the autofill permission |
 | `GET /api/ext/autofill/runner.js` | The code that applies the steps, the same the browser extension bundles |
+| `GET /api/ext/autofill/capture.js` | The code that reads a filled form, for **Save form** |
+| `POST /api/ext/autofill/capture` | Turns the captured fields into steps, appended to the bookmark's automation as pending |
 | `GET /api/v1/version` | Server version for Settings. 404 on servers older than 0.20.2 |
 
 Plus `api.github.com` for update checks, on a separate HTTP client with no cookie jar.

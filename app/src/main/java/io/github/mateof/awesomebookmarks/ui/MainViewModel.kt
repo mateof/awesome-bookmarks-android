@@ -147,11 +147,6 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch { _events.send(MainEvent.Reload) }
     }
 
-    fun navigateTo(path: String) {
-        val baseUrl = sessionManager.activeBaseUrl ?: return
-        viewModelScope.launch { _events.send(MainEvent.Load(baseUrl + path)) }
-    }
-
     private fun SessionResult.SignInRequired.toSignInState() = MainUiState.NeedsSignIn(
         prefill = currentSettings.copy(primaryUrl = baseUrl.ifBlank { currentSettings.primaryUrl }),
         problem = problem.takeIf { it != SignInProblem.NO_CREDENTIALS_STORED },

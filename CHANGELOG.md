@@ -6,6 +6,22 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.0]
+
+### Added
+- **Save a form from the app.** The autofill screen has a **Save form**
+  button: fill the page by hand and it becomes the bookmark's automation, with
+  your autofill variables wherever a value matches (type your ID number and
+  the step reads `{{dni}}`). It adds to any automation already there instead of
+  replacing it, and stays pending until you approve it in the bookmark. The
+  bookmark page offers **Capture in the app** to open any bookmark in that
+  screen (server 1.17.0 or later).
+
+### Fixed
+- The search button on the floating menu opened a search page with no box to
+  type in, which showed nothing. It now opens the app's search palette on top
+  of the page you are on.
+
 ## [0.5.0]
 
 ### Added

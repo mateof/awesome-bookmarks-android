@@ -8,12 +8,19 @@ import io.github.mateof.awesomebookmarks.network.ApiCall
 import io.github.mateof.awesomebookmarks.network.BookmarksApi
 import io.github.mateof.awesomebookmarks.network.SessionManager
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
 sealed interface AutofillState {
-    data class Ready(val runtime: AutofillRuntime, val runner: String) : AutofillState
+    data class Ready(
+        val runtime: AutofillRuntime,
+        val runner: String,
+        val captureScript: String?,
+    ) : AutofillState
     data object NotAllowed : AutofillState
     data object Unsupported : AutofillState
     data class Failed(val message: String) : AutofillState
@@ -51,13 +58,34 @@ class AutofillRepository @Inject constructor(
                 if (runtime == null || runner == null) {
                     AutofillState.Failed("Unexpected autofill answer")
                 } else {
-                    AutofillState.Ready(runtime, runner)
+                    AutofillState.Ready(runtime, runner, api.autofillCaptureScript(baseUrl))
                 }
             }
 
             else -> null
         }
         ApiCall(response.httpCode, state, response.errorMessage())
+    }
+
+    suspend fun capture(bookmarkId: String?, url: String, fields: JsonArray): CaptureOutcome {
+        val outcome = runCatching {
+            session.withSession { baseUrl, token ->
+                val body = buildJsonObject {
+                    bookmarkId?.let { put("bookmarkId", it) }
+                    put("url", url)
+                    put("fields", fields)
+                }
+                val response = api.captureForm(baseUrl, body.toString(), token)
+                val outcome = when {
+                    response.httpCode == 403 -> CaptureOutcome.NotAllowed
+                    response.isSuccess -> parseCaptureResult(response.body)
+                    else -> null
+                }
+                ApiCall(response.httpCode, outcome, response.errorMessage())
+            }
+        }.getOrElse { CaptureOutcome.Failed(it.message.orEmpty()) }
+        cache = null
+        return outcome
     }
 
     private companion object {
