@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.provider.MediaStore
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.view.WindowManager
 import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
@@ -321,7 +322,7 @@ class MainActivity : FragmentActivity() {
                         startActivity(Intent(this@MainActivity, SaveBookmarkActivity::class.java))
                     },
                     onReload = { webView?.reload() },
-                    onSearch = { webView?.evaluateJavascript(OPEN_SEARCH_JS, null) },
+                    onSearch = ::openSearch,
                 )
             }
         }
@@ -342,6 +343,19 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
+    }
+
+    private fun openSearch() {
+        val view = webView ?: return
+        view.evaluateJavascript(OPEN_SEARCH_JS, null)
+        view.requestFocus()
+        view.postDelayed(
+            {
+                getSystemService(InputMethodManager::class.java)
+                    ?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+            },
+            KEYBOARD_DELAY_MS,
+        )
     }
 
     private fun openSettings() = startActivity(Intent(this, SettingsActivity::class.java))
@@ -643,6 +657,7 @@ class MainActivity : FragmentActivity() {
         const val EXIT_CONFIRM_WINDOW_MS = 2_000L
         const val AUTOFILL_LOOKUP_MS = 3_000L
         const val APP_SCHEME = "abapp"
+        const val KEYBOARD_DELAY_MS = 250L
         const val OPEN_SEARCH_JS =
             "window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));"
     }

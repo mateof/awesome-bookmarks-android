@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.1]
+
+### Fixed
+- The search button on the floating menu opened the search palette but left
+  the keyboard closed, so you had to tap the box before typing. A focus set by
+  the page cannot raise the keyboard on Android; the app now asks for it.
+
 ## [0.6.0]
 
 ### Added
